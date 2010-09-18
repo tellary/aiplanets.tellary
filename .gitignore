@@ -1,0 +1,7 @@
+*.class
+*.log
+log.txt
+game.txt
+*.swp
+.idea
+*.iml
