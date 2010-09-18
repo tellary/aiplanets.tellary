@@ -20,14 +20,14 @@ public class DualBot {
 	}
 	// (1) If we current have more tha numFleets fleets in flight, just do
 	// nothing until at least one of the fleets arrives.
-	if (pw.MyFleets().size() >= numFleets) {
+	if (pw.myFleets().size() >= numFleets) {
 	    return;
 	}
 	// (2) Find my strongest planet.
 	Planet source = null;
 	double sourceScore = Double.MIN_VALUE;
-	for (Planet p : pw.MyPlanets()) {
-	    double score = (double)p.NumShips() / (1 + p.GrowthRate());
+	for (Planet p : pw.myPlanets()) {
+	    double score = (double)p.getNumShips() / (1 + p.getGrowthRate());
 	    if (score > sourceScore) {
 		sourceScore = score;
 		source = p;
@@ -36,12 +36,12 @@ public class DualBot {
 	// (3) Find the weakest enemy or neutral planet.
 	Planet dest = null;
 	double destScore = Double.MIN_VALUE;
-	List<Planet> candidates = pw.NotMyPlanets();
+	List<Planet> candidates = pw.notMyPlanets();
 	if (attackMode) {
 	    candidates = pw.EnemyPlanets();
 	}
 	for (Planet p : candidates) {
-	    double score = (double)(1 + p.GrowthRate()) / p.NumShips();
+	    double score = (double)(1 + p.getGrowthRate()) / p.getNumShips();
 	    if (score > destScore) {
 		destScore = score;
 		dest = p;
@@ -50,7 +50,7 @@ public class DualBot {
 	// (4) Send half the ships from my strongest planet to the weakest
 	// planet that I do not own.
 	if (source != null && dest != null) {
-	    int numShips = source.NumShips() / 2;
+	    int numShips = source.getNumShips() / 2;
 	    pw.IssueOrder(source, dest, numShips);
 	}
     }

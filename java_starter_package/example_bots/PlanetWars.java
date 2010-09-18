@@ -48,7 +48,7 @@ public class PlanetWars {
     public List<Planet> MyPlanets() {
 	List<Planet> r = new ArrayList<Planet>();
 	for (Planet p : planets) {
-	    if (p.Owner() == 1) {
+	    if (p.getOwner() == 1) {
 		r.add(p);
 	    }
 	}
@@ -59,7 +59,7 @@ public class PlanetWars {
     public List<Planet> NeutralPlanets() {
 	List<Planet> r = new ArrayList<Planet>();
 	for (Planet p : planets) {
-	    if (p.Owner() == 0) {
+	    if (p.getOwner() == 0) {
 		r.add(p);
 	    }
 	}
@@ -71,7 +71,7 @@ public class PlanetWars {
     public List<Planet> EnemyPlanets() {
 	List<Planet> r = new ArrayList<Planet>();
 	for (Planet p : planets) {
-	    if (p.Owner() >= 2) {
+	    if (p.getOwner() >= 2) {
 		r.add(p);
 	    }
 	}
@@ -83,7 +83,7 @@ public class PlanetWars {
     public List<Planet> NotMyPlanets() {
 	List<Planet> r = new ArrayList<Planet>();
 	for (Planet p : planets) {
-	    if (p.Owner() != 1) {
+	    if (p.getOwner() != 1) {
 		r.add(p);
 	    }
 	}
@@ -150,7 +150,7 @@ public class PlanetWars {
     //   * the ships will take a few turns to reach their destination. Travel
     //     is not instant. See the Distance() function for more info.
     public void IssueOrder(Planet source, Planet dest, int numShips) {
-        System.out.println("" + source.PlanetID() + " " + dest.PlanetID() +
+        System.out.println("" + source.getPlanetId() + " " + dest.getPlanetId() +
           " " + numShips);
 	System.out.flush();
     }
@@ -166,7 +166,7 @@ public class PlanetWars {
     // Otherwise, the player is deemed to be dead and false is returned.
     public boolean IsAlive(int playerID) {
 	for (Planet p : planets) {
-	    if (p.Owner() == playerID) {
+	    if (p.getOwner() == playerID) {
 		return true;
 	    }
 	}
@@ -185,7 +185,7 @@ public class PlanetWars {
     public int Winner() {
 	Set<Integer> remainingPlayers = new TreeSet<Integer>();
 	for (Planet p : planets) {
-	    remainingPlayers.add(p.Owner());
+	    remainingPlayers.add(p.getOwner());
 	}
 	for (Fleet f : fleets) {
 	    remainingPlayers.add(f.Owner());
@@ -205,13 +205,13 @@ public class PlanetWars {
     public int NumShips(int playerID) {
 	int numShips = 0;
 	for (Planet p : planets) {
-	    if (p.Owner() == playerID) {
-		numShips += p.NumShips();
+	    if (p.getOwner() == playerID) {
+		numShips += p.getNumShips();
 	    }
 	}
 	for (Fleet f : fleets) {
 	    if (f.Owner() == playerID) {
-		numShips += f.NumShips();
+		numShips += f.getNumShips();
 	    }
 	}
 	return numShips;
@@ -221,8 +221,8 @@ public class PlanetWars {
     public int Production(int playerID) {
 	int prod = 0;
 	for (Planet p : planets) {
-	    if (p.Owner() == playerID) {
-		prod += p.GrowthRate();
+	    if (p.getOwner() == playerID) {
+		prod += p.getGrowthRate();
 	    }
 	}
 	return prod;

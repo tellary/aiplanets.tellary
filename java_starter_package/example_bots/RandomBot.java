@@ -4,13 +4,13 @@ public class RandomBot {
     public static void DoTurn(PlanetWars pw) {
 	// (1) If we current have a fleet in flight, then do nothing until it
 	// arrives.
-	if (pw.MyFleets().size() >= 1) {
+	if (pw.myFleets().size() >= 1) {
 	    return;
 	}
 	// (2) Pick one of my planets at random.
 	Random r = new Random();
 	Planet source = null;
-	List<Planet> p = pw.MyPlanets();
+	List<Planet> p = pw.myPlanets();
 	if (p.size() > 0) {
 	    source = p.get(r.nextInt(p.size()));
 	}
@@ -22,7 +22,7 @@ public class RandomBot {
 	}
 	// (4) Send half the ships from source to dest.
 	if (source != null && dest != null) {
-	    int numShips = source.NumShips() / 2;
+	    int numShips = source.numShips() / 2;
 	    pw.IssueOrder(source, dest, numShips);
 	}
     }

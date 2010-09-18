@@ -1,9 +1,7 @@
-import java.util.*;
-
 public class RageBot {
     public static void DoTurn(PlanetWars pw) {
-	for (Planet source : pw.MyPlanets()) {
-	    if (source.NumShips() < 10 * source.GrowthRate()) {
+	for (Planet source : pw.myPlanets()) {
+	    if (source.numShips() < 10 * source.GrowthRate()) {
 		continue;
 	    }
 	    Planet dest = null;
@@ -16,7 +14,7 @@ public class RageBot {
 		}
 	    }
 	    if (dest != null) {
-		pw.IssueOrder(source, dest, source.NumShips());
+		pw.IssueOrder(source, dest, source.numShips());
 	    }
 	}
     }

@@ -1,16 +1,14 @@
-import java.util.*;
-
 public class BullyBot {
     public static void DoTurn(PlanetWars pw) {
 	// (1) If we current have a fleet in flight, just do nothing.
-	if (pw.MyFleets().size() >= 1) {
+	if (pw.myFleets().size() >= 1) {
 	    return;
 	}
 	// (2) Find my strongest planet.
 	Planet source = null;
 	double sourceScore = Double.MIN_VALUE;
-	for (Planet p : pw.MyPlanets()) {
-	    double score = (double)p.NumShips();
+	for (Planet p : pw.myPlanets()) {
+	    double score = (double)p.numShips();
 	    if (score > sourceScore) {
 		sourceScore = score;
 		source = p;
@@ -20,7 +18,7 @@ public class BullyBot {
 	Planet dest = null;
 	double destScore = Double.MIN_VALUE;
 	for (Planet p : pw.NotMyPlanets()) {
-	    double score = 1.0 / (1 + p.NumShips());
+	    double score = 1.0 / (1 + p.numShips());
 	    if (score > destScore) {
 		destScore = score;
 		dest = p;
@@ -29,7 +27,7 @@ public class BullyBot {
 	// (4) Send half the ships from my strongest planet to the weakest
 	// planet that I do not own.
 	if (source != null && dest != null) {
-	    int numShips = source.NumShips() / 2;
+	    int numShips = source.numShips() / 2;
 	    pw.IssueOrder(source, dest, numShips);
 	}
     }
