@@ -10,95 +10,67 @@ public class PlanetWarsState {
     public static final int ENEMY = 2;
     public static final int NEUTRAL = 0;
 
-    private Map<Integer, Planet> planets;
-    private List<Fleet> fleets;
+    private List<int[]> planetsInTime;
+    private List<int[]> ownersInTime;
+    private List<int[]> arrivalsInTime;
+    private int[] growth;
+    private int[][] distances;
 
-    private boolean badState = false;
-
-    //Calculate PlanetWars state for next move after all commands will be applied
-    public PlanetWarsState(PlanetWars pw, List<Command> commands) {
-        planets = new HashMap<Integer, Planet>();
-        for (Planet p : pw.Planets()) {
-            try {
-                Planet planet = (Planet) p.clone();
-                if (planet.getOwner() != NEUTRAL) {
-                    planet.addShips(planet.getGrowthRate());
-                } 
-                planets.put(p.getPlanetId(), (Planet) p.clone());
-            } catch (CloneNotSupportedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        fleets = new LinkedList<Fleet>();
-        for (Fleet f : pw.Fleets()) {
-            Fleet fleet;
-            try {
-                fleet = (Fleet) f.clone();
-            } catch (CloneNotSupportedException e) {
-                throw new RuntimeException(e);
-            }
-            if (f.getTurnsRemaining() == 1) {
-                Planet planet = planets.get(f.getDestinationPlanet());
-                if (planet.getOwner() == ME) {
-                    planet.addShips(f.getNumShips());
-                } else {
-                    if (planet.getNumShips() >= f.getNumShips()) {
-                        planet.removeShips(f.getNumShips());
-                    } else {
-                        planet.addShips(f.getNumShips() - planet.getNumShips());
-                    }
-                }
-            } else {
-                fleet.timeStep();
-                fleets.add(fleet);
-            }
-        }
-        for (Command command : commands) {
-            if (command.getNumShips() == 0)
-                continue;
-            Planet source = planets.get(command.getSourcePlanet().getPlanetId());
-            if (source.getNumShips() >= command.getNumShips())
-                source.removeShips(command.getNumShips());
-            else {
-                badState = true;
-                return;
-            }
-            Planet dest = planets.get(command.getDestinationPlanetId());
-            int length = pw.Distance(source.getPlanetId(), dest.getPlanetId());
-            fleets.add(new Fleet(ME, command.getNumShips(), command.getSourcePlanet().getPlanetId(), command.getDestinationPlanetId(), length, length));
-        }
+    public PlanetWarsState(
+            List<int[]> planetsInTime,
+            List<int[]> ownersInTime,
+            List<int[]> arrivalsInTime,
+            int[] growth,
+            int[][] distances) {
+        this.planetsInTime = planetsInTime;
+        this.ownersInTime = ownersInTime;
+        this.arrivalsInTime = arrivalsInTime;
+        this.growth = growth;
+        this.distances = distances;
     }
 
-    public boolean isBadState() {
-        return badState;
+    public List<int[]> getPlanetsInTime() {
+        return planetsInTime;
     }
 
-    // Return a list of all the fleets owned by the current player.
-    public List<Fleet> myFleets() {
-        List<Fleet> r = new ArrayList<Fleet>();
-        for (Fleet f : fleets) {
-            if (f.Owner() == ME) {
-                r.add(f);
-            }
+    public List<int[]> getOwnersInTime() {
+        return ownersInTime;
+    }
+
+    public List<int[]> getArrivalsInTime() {
+        return arrivalsInTime;
+    }
+
+    public int[] getGrowth() {
+        return growth;
+    }
+
+    public int[][] getDistances() {
+        return distances;
+    }
+
+    public PlanetWarsState copy() {
+        List<int[]> planetsInTime = new ArrayList<int[]>();
+        for (int[] planets : this.planetsInTime) {
+            int[] copy = new int[planets.length];
+            System.arraycopy(planets, 0, copy, 0, planets.length);
+            planetsInTime.add(copy);
         }
-        return r;
-    }
 
-    // Return a list of all the planets owned by the current player. By
-    // convention, the current player is always player number 1.
-    public List<Planet> myPlanets() {
-        List<Planet> r = new ArrayList<Planet>();
-        for (Planet p : planets.values()) {
-            if (p.getOwner() == ME) {
-                r.add(p);
-            }
+        List<int[]> ownersInTime = new ArrayList<int[]>();
+        for (int[] owners : this.ownersInTime) {
+            int[] copy = new int[owners.length];
+            System.arraycopy(owners, 0, copy, 0, owners.length);
+            ownersInTime.add(copy);
         }
-        return r;
-    }
 
-    // Returns the planet with the given planet_id. There are NumPlanets()
-    // planets. They are numbered starting at 0.
-    public Planet getPlanet(int planetID) {
-        return planets.get(planetID);
+        List<int[]> arrivalsInTime = new ArrayList<int[]>();
+        for (int[] arrivals : this.arrivalsInTime) {
+            int[] copy = new int[arrivals.length];
+            System.arraycopy(arrivals, 0, copy, 0, arrivals.length);
+            arrivalsInTime.add(copy);
+        }
+
+        return new PlanetWarsState(planetsInTime, ownersInTime, arrivalsInTime, growth, distances);
     }
 }

@@ -16,7 +16,7 @@ public class RandomBot {
 	}
 	// (3) Pick a target planet at random.
 	Planet dest = null;
-	p = pw.Planets();
+	p = pw.planets();
 	if (p.size() > 0) {
 	    dest = p.get(r.nextInt(p.size()));
 	}

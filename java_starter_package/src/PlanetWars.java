@@ -15,7 +15,7 @@ public class PlanetWars {
         ParseGameState(gameStateString);
     }
 
-    // Returns the number of planets. Planets are numbered starting with 0.
+    // Returns the number of planets. planets are numbered starting with 0.
     public int NumPlanets() {
         return planets.size();
     }
@@ -31,7 +31,7 @@ public class PlanetWars {
         return fleets.size();
     }
 
-    // Returns the fleet with the given fleet_id. Fleets are numbered starting
+    // Returns the fleet with the given fleet_id. fleets are numbered starting
     // with 0. There are NumFleets() fleets. fleet_id's are not consistent from
     // one turn to the next.
     public Fleet getFleet(int fleetID) {
@@ -39,7 +39,7 @@ public class PlanetWars {
     }
 
     // Returns a list of all the planets.
-    public List<Planet> Planets() {
+    public List<Planet> planets() {
         return planets;
     }
 
@@ -91,7 +91,7 @@ public class PlanetWars {
     }
 
     // Return a list of all the fleets.
-    public List<Fleet> Fleets() {
+    public List<Fleet> fleets() {
         List<Fleet> r = new ArrayList<Fleet>();
         for (Fleet f : fleets) {
             r.add(f);
@@ -103,7 +103,7 @@ public class PlanetWars {
     public List<Fleet> myFleets() {
         List<Fleet> r = new ArrayList<Fleet>();
         for (Fleet f : fleets) {
-            if (f.Owner() == 1) {
+            if (f.getOwner() == 1) {
                 r.add(f);
             }
         }
@@ -114,7 +114,7 @@ public class PlanetWars {
     public List<Fleet> EnemyFleets() {
         List<Fleet> r = new ArrayList<Fleet>();
         for (Fleet f : fleets) {
-            if (f.Owner() != 1) {
+            if (f.getOwner() != 1) {
                 r.add(f);
             }
         }
@@ -182,7 +182,7 @@ public class PlanetWars {
             }
         }
         for (Fleet f : fleets) {
-            if (f.Owner() == playerID) {
+            if (f.getOwner() == playerID) {
                 return true;
             }
         }
@@ -199,7 +199,7 @@ public class PlanetWars {
             remainingPlayers.add(p.getOwner());
         }
         for (Fleet f : fleets) {
-            remainingPlayers.add(f.Owner());
+            remainingPlayers.add(f.getOwner());
         }
         switch (remainingPlayers.size()) {
             case 0:
@@ -221,7 +221,7 @@ public class PlanetWars {
             }
         }
         for (Fleet f : fleets) {
-            if (f.Owner() == playerID) {
+            if (f.getOwner() == playerID) {
                 numShips += f.getNumShips();
             }
         }

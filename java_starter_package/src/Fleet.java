@@ -27,7 +27,7 @@ public class Fleet implements Comparable, Cloneable {
 
     // Accessors and simple modification functions. These should be mostly
     // self-explanatory.
-    public int Owner() {
+    public int getOwner() {
         return owner;
     }
 
