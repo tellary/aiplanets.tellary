@@ -27,19 +27,22 @@ public class MyBot {
                 if (transitions.get(i, j) != 0) {
                     int numShips = transitions.get(i, j);
                     if (numShips > 0) {
-                        if (pw.getPlanet(i).getOwner() != PlanetWarsState.ME)
-                            Log.log(turn, "Fuck!");
-                        Log.log(turn, "Issuing order: " + i + " " + j + " " + numShips);
-                        pw.IssueOrder(i, j, numShips);
+                        issueOrder(pw, i, j, numShips);
                     } else {
-                        if (pw.getPlanet(j).getOwner() != PlanetWarsState.ME)
-                            Log.log(turn, "Fuck!");
-                        Log.log(turn, "Issuing order: " + j + " " + i + " " + -numShips);
-                        pw.IssueOrder(j, i, -numShips);
+                        issueOrder(pw, j, i, -numShips);
                     }
                 }
             }
         }
+    }
+
+    private static void issueOrder(PlanetWars pw, int i, int j, int numShips) {
+        Log.log(turn, "Issuing order: " + i + " " + j + " " + numShips);
+        if (pw.getPlanet(i).getOwner() != PlanetWarsState.ME)
+            Log.log(turn, "Not my planet!");
+        if (pw.getPlanet(i).getNumShips() < numShips)
+            Log.log(turn, "Not enough ships!");
+        pw.IssueOrder(i, j, numShips);
     }
 
     private static AsymmetricMatrix selectAction(PlanetWarsState state) {
@@ -125,6 +128,10 @@ public class MyBot {
     }
 
     private static boolean shouldStop() {
+        //noinspection SimplifiableIfStatement
+        if ("true".equals(System.getProperty("debug"))) {
+            return false;
+        }
         return System.currentTimeMillis() - start > 800;
     }
 
@@ -224,12 +231,12 @@ public class MyBot {
                 if (transitions.get(i, j) > 0) {
                     arrivals[j] += transitions.get(i, j);
                     planets[i] -= transitions.get(i, j);
-                    if (planets[i] < 0)
+                    if (prevPlanets[i] < 0 || prevPlanets[i] < transitions.get(i, j))
                         return false;
                 } else {
                     arrivals[i] += transitions.get(j, i);
                     planets[j] -= transitions.get(j, i);
-                    if (planets[j] < 0)
+                    if (prevPlanets[j] < 0 || prevPlanets[j] < transitions.get(j, i))
                         return false;
                 }
             }
@@ -240,8 +247,6 @@ public class MyBot {
     private static List<List<AsymmetricMatrix>> guessGoodPlans(PlanetWarsState state) {
         List<List<AsymmetricMatrix>> plan = new ArrayList<List<AsymmetricMatrix>>();
         plan.add(doNothingPlan(state));
-        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.01));
-        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.05));
         plan.addAll(onePlanetDefenseAnotherPlans(state, 0.1));
         plan.addAll(onePlanetDefenseAnotherPlans(state, 0.2));
         plan.addAll(onePlanetDefenseAnotherPlans(state, 0.3));
@@ -252,7 +257,7 @@ public class MyBot {
         plan.addAll(takeOnePlanetWithDefensePlans(state, 0.3f));
         plan.addAll(takeOnePlanetPlans(state));
         plan.add(attackAllPlanetsPlan(state));
-        
+
         return plan;
     }
 
