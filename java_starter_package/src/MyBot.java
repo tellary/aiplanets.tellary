@@ -2,6 +2,7 @@ import java.util.*;
 
 public class MyBot {
     private static int turn = 0;
+    private static long start;
     // The DoTurn function is where your code goes. The PlanetWars object
     // contains the state of the game, including information about all planets
     // and fleets that currently exist. Inside this function, you issue orders
@@ -113,12 +114,18 @@ public class MyBot {
 
         for (int i = 1; i < plans.size(); ++i) {
             int score = score(state, plans.get(i));
+            if (shouldStop())
+                return bestPlan;
             if (score > bestScore) {
                 bestScore = score;
                 bestPlan = plans.get(i);
             }
         }
         return bestPlan;
+    }
+
+    private static boolean shouldStop() {
+        return System.currentTimeMillis() - start > 800;
     }
 
     private static int score(PlanetWarsState state, List<AsymmetricMatrix> plan) {
@@ -437,6 +444,9 @@ public class MyBot {
                 switch (c) {
                     case '\n':
                         if (line.equals("go")) {
+                            start = System.currentTimeMillis();
+                            if (turn % 10 == 0)
+                                System.gc();
                             PlanetWars pw = new PlanetWars(message);
                             DoTurn(pw);
                             pw.FinishTurn();
