@@ -6,6 +6,7 @@ public class MyBot {
 
     private static int[][] distances;
     private static int avgDistance;
+    private static int maxDistance;
     // The DoTurn function is where your code goes. The PlanetWars object
     // contains the state of the game, including information about all planets
     // and fleets that currently exist. Inside this function, you issue orders
@@ -36,6 +37,8 @@ public class MyBot {
                         avgDistance += distances[i][j];
                         ++avgNum;
                     }
+                    if (distances[i][j] > maxDistance)
+                        maxDistance = distances[i][j];
                 }
             }
             avgDistance = (int) (((double)avgDistance)/avgNum);
@@ -154,7 +157,7 @@ public class MyBot {
         state = state.copy();
 
         //TODO: adjust lookahead
-        for (int i = 0; i < 500; ++i) {
+        for (int i = 0; i < maxDistance; ++i) {
             boolean success;
             if (i < plan.size())
                 success = calculateNextTurn(state, plan.get(i), i);
@@ -165,8 +168,8 @@ public class MyBot {
             }
         }
 
-        return scoreNumShipsCoulomb(state);
-//        return scoreNumShips(state);
+//        return scoreNumShipsCoulomb(state);
+        return scoreNumShips(state);
 //        return scoreNumPlanets(state);
     }
 
@@ -290,10 +293,10 @@ public class MyBot {
         plan.addAll(onePlanetDefenseAnotherPlans(state, 0.7));
         plan.addAll(onePlanetDefenseAnotherPlans(state, 0.3));
         plan.addAll(onePlanetDefenseAnotherPlans(state, 0.1));
-        plan.addAll(exchangeShipsPlan(state, 0.9));
-        plan.addAll(exchangeShipsPlan(state, 0.6));
+//        plan.addAll(exchangeShipsPlan(state, 0.9));
+//        plan.addAll(exchangeShipsPlan(state, 0.6));
         plan.addAll(exchangeShipsPlan(state, 0.3));
-        plan.addAll(exchangeShipsPlan(state, 0.1));
+//        plan.addAll(exchangeShipsPlan(state, 0.1));
         plan.add(attackAllPlanetsPlan(state));
 
         return plan;
