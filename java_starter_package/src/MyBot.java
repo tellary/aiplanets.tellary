@@ -3,6 +3,9 @@ import java.util.*;
 public class MyBot {
     private static int turn = 0;
     private static long start;
+
+    private static int[][] distances;
+    private static int avgDistance;
     // The DoTurn function is where your code goes. The PlanetWars object
     // contains the state of the game, including information about all planets
     // and fleets that currently exist. Inside this function, you issue orders
@@ -14,6 +17,30 @@ public class MyBot {
     // your own. Check out the tutorials and articles on the contest website at
     // http://www.ai-contest.com/resources.
     public static void DoTurn(PlanetWars pw) {
+        if (turn == 0) {
+            List<Planet> planetList = pw.planets();
+            int planetsAmount = planetList.size();
+
+            distances = new int[planetsAmount][];
+            avgDistance = 0;
+            int avgNum = 0;
+            for (int i = 0; i < planetList.size(); ++i) {
+                Planet source = planetList.get(i);
+                distances[i] = new int[i];
+                for (int j = 0 ; j < i; ++j) {
+                    Planet destination = planetList.get(j);
+                    double dx = source.X() - destination.X();
+                    double dy = source.Y() - destination.Y();
+                    distances[i][j] = (int)Math.ceil(Math.sqrt(dx * dx + dy * dy));
+                    if (i != j) {
+                        avgDistance += distances[i][j];
+                        ++avgNum;
+                    }
+                }
+            }
+            avgDistance = (int) (((double)avgDistance)/avgNum);
+
+        }
         ++turn;
         AsymmetricMatrix transitions;
         try {
@@ -95,18 +122,6 @@ public class MyBot {
         planetsInTime.add(planets);
         ownersInTime.add(owners);
 
-        int[][] distances = new int[planetsAmount][];
-        List<Planet> planetList = pw.planets();
-        for (int i = 0; i < planets.length; ++i) {
-            Planet source = planetList.get(i);
-            distances[i] = new int[i];
-            for (int j = 0 ; j < i; ++j) {
-                Planet destination = planetList.get(j);
-                double dx = source.X() - destination.X();
-                double dy = source.Y() - destination.Y();
-                distances[i][j] = (int)Math.ceil(Math.sqrt(dx * dx + dy * dy));
-            }
-        }
 
         return new PlanetWarsState(planetsInTime, ownersInTime, arrivalsInTime, growth, distances);
     }
@@ -150,7 +165,8 @@ public class MyBot {
             }
         }
 
-        return scoreNumShips(state);
+        return scoreNumShipsCoulomb(state);
+//        return scoreNumShips(state);
 //        return scoreNumPlanets(state);
     }
 
@@ -161,6 +177,26 @@ public class MyBot {
             sumShips += lastPlanet;
         }
         return sumShips;
+    }
+
+    private static int scoreNumShipsCoulomb(PlanetWarsState state) {
+        int[] planets = state.getPlanetsInTime().get(state.getPlanetsInTime().size() - 1);
+        int[] owners = state.getOwnersInTime().get(state.getOwnersInTime().size() - 1);
+        int score = 0;
+        for (int i = 0; i < planets.length; ++i) {
+            for (int j = 0; j <= i; ++j) {
+                if (owners[i] == 1 && owners[j] == 1) {
+                    if (i != j) {
+                        int d = distances[i][j];
+                        score += (int) ((double) planets[i]) * planets[j] / (d*d);
+                    } else {
+//                        score += planets[i] * planets[j];
+                    }
+                }
+            }
+        }
+        return score;
+//        return score;
     }
 
     private static int scoreNumPlanets(PlanetWarsState state) {
@@ -247,18 +283,45 @@ public class MyBot {
     private static List<List<AsymmetricMatrix>> guessGoodPlans(PlanetWarsState state) {
         List<List<AsymmetricMatrix>> plan = new ArrayList<List<AsymmetricMatrix>>();
         plan.add(doNothingPlan(state));
-        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.1));
-        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.2));
-        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.3));
-        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.4));
-        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.7));
+        plan.addAll(takeOnePlanetPlans(state));
         plan.addAll(takeOnePlanetWithDefensePlans(state, 0.7f));
         plan.addAll(takeOnePlanetWithDefensePlans(state, 0.5f));
         plan.addAll(takeOnePlanetWithDefensePlans(state, 0.3f));
-        plan.addAll(takeOnePlanetPlans(state));
+        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.7));
+        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.3));
+        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.1));
+        plan.addAll(exchangeShipsPlan(state, 0.9));
+        plan.addAll(exchangeShipsPlan(state, 0.6));
+        plan.addAll(exchangeShipsPlan(state, 0.3));
+        plan.addAll(exchangeShipsPlan(state, 0.1));
         plan.add(attackAllPlanetsPlan(state));
 
         return plan;
+    }
+
+    private static List<List<AsymmetricMatrix>> exchangeShipsPlan(PlanetWarsState state, double factor) {
+        int[] planets = state.getPlanetsInTime().get(0);
+        int[] owners = state.getOwnersInTime().get(0);
+
+
+        List<List<AsymmetricMatrix>> plans = new LinkedList<List<AsymmetricMatrix>>();
+        for (int i = 0; i < planets.length; ++i) {
+            if (owners[i] == 1) {
+                for (int j = 0; j < i; ++j) {
+                    if (owners[j] == 1) {
+                        AsymmetricMatrix transitions = new AsymmetricMatrix(planets.length);
+                        transitions.set(i, j, (int)factor*planets[i]);
+                        List<AsymmetricMatrix> transitionsInTime = new LinkedList<AsymmetricMatrix>();
+                        transitionsInTime.add(transitions);
+                        plans.add(transitionsInTime);
+                    }
+                }
+            }
+        }
+
+
+
+        return plans;
     }
 
     private static List<AsymmetricMatrix> attackAllPlanetsPlan(PlanetWarsState state) {
