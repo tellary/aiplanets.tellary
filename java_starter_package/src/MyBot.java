@@ -4,9 +4,11 @@ public class MyBot {
     private static int turn = 0;
     private static long start;
 
-    private static int[][] distances;
-    private static int avgDistance;
-    private static int maxDistance;
+    public static int[][] distances;
+    public static int avgDistance;
+    public static int maxDistance;
+
+    public static int[] growth;
     // The DoTurn function is where your code goes. The PlanetWars object
     // contains the state of the game, including information about all planets
     // and fleets that currently exist. Inside this function, you issue orders
@@ -23,6 +25,7 @@ public class MyBot {
             int planetsAmount = planetList.size();
 
             distances = new int[planetsAmount][];
+            growth = new int[planetsAmount];
             avgDistance = 0;
             int avgNum = 0;
             for (int i = 0; i < planetList.size(); ++i) {
@@ -40,6 +43,7 @@ public class MyBot {
                     if (distances[i][j] > maxDistance)
                         maxDistance = distances[i][j];
                 }
+                growth[i] = planetList.get(i).getGrowthRate();
             }
             avgDistance = (int) (((double)avgDistance)/avgNum);
 
@@ -87,7 +91,6 @@ public class MyBot {
         int planetsAmount = pw.planets().size();
         int[] planets = new int[planetsAmount];
         int[] owners = new int[planetsAmount];
-        int[] growth = new int[planetsAmount];
         for (Planet planet : pw.planets()) {
             growth[planet.getPlanetId()] = planet.getGrowthRate();
             if (planet.getOwner() == PlanetWarsState.ME) {
@@ -126,7 +129,7 @@ public class MyBot {
         ownersInTime.add(owners);
 
 
-        return new PlanetWarsState(planetsInTime, ownersInTime, arrivalsInTime, growth, distances);
+        return new PlanetWarsState(planetsInTime, ownersInTime, arrivalsInTime);
     }
 
     private static List<AsymmetricMatrix> findBestPlan(PlanetWarsState state, List<List<AsymmetricMatrix>> plans) {
@@ -156,17 +159,15 @@ public class MyBot {
     private static int score(PlanetWarsState state, List<AsymmetricMatrix> plan) {
         state = state.copy();
 
-        //TODO: adjust lookahead
-        for (int i = 0; i < maxDistance; ++i) {
-            boolean success;
-            if (i < plan.size())
-                success = calculateNextTurn(state, plan.get(i), i);
-            else
-                success = calculateNextTurn(state, null, i);
-            if (!success) {
-                return Integer.MIN_VALUE;
-            }
-        }
+        state.setMyPlan(plan.iterator());
+        Result result;
+        //noinspection StatementWithEmptyBody
+        while ((result = state.evaluateTurn()) == Result.SUCCESS);
+
+        if (result == Result.FAILED)
+            return Integer.MIN_VALUE;
+
+        //TODO: Should I wait a bit for just taken planet to produce enough ships to compensate it conquest? 
 
 //        return scoreNumShipsCoulomb(state);
         return scoreNumShips(state);
@@ -209,78 +210,6 @@ public class MyBot {
             numPlanets += owner;
         }
         return numPlanets;
-    }
-
-    private static boolean calculateNextTurn(PlanetWarsState state, AsymmetricMatrix transitions, int turn) {
-        int planetsAmount = state.getPlanetsInTime().iterator().next().length;
-        int[] planets = new int[planetsAmount];
-        int[] prevPlanets = state.getPlanetsInTime().get(state.getPlanetsInTime().size() - 1);
-        int[] arrivals;
-        if (turn < state.getArrivalsInTime().size()) {
-            arrivals = state.getArrivalsInTime().get(turn);
-        } else {
-            arrivals = new int[planets.length];
-        }
-        int[] owners = new int[planetsAmount];
-        int[] prevOwners = state.getOwnersInTime().get(state.getOwnersInTime().size() - 1);
-        int[] growth = state.getGrowth();
-
-        for (int i = 0; i < planets.length; ++i) {
-            planets[i] = arrivals[i] + prevOwners[i] * growth[i] + prevPlanets[i];
-            if (prevPlanets[i] < 0) {
-                if (planets[i] > 0)
-                    owners[i] = 1;
-                else
-                    owners[i] = prevOwners[i];
-            } else {
-                if (planets[i] < 0)
-                    owners[i] = -1;
-                else
-                    owners[i] = prevOwners[i];
-            }
-        }
-        state.getPlanetsInTime().add(planets);
-        state.getOwnersInTime().add(owners);
-
-        if (transitions == null)
-            return true;
-
-        int[][] distances = state.getDistances();
-        for (int i = 0; i < transitions.size(); ++i) {
-            for (int j = 0; j < i; ++j) {
-                if (transitions.get(i,j) == 0)
-                    continue;
-                int distance = distances[i][j];
-                if (distance == 0)
-                    continue;
-
-                distance += turn - 1;
-
-                ListIterator<int[]> iter = state.getArrivalsInTime().listIterator();
-                for (int a = 0; a < distance; ++a) {
-                    if (iter.hasNext())
-                        arrivals = iter.next();
-                    else {
-                        iter.add(arrivals = new int[planetsAmount]);
-                    }
-                }
-                if (arrivals == null)
-                    throw new RuntimeException();
-
-                if (transitions.get(i, j) > 0) {
-                    arrivals[j] += transitions.get(i, j);
-                    planets[i] -= transitions.get(i, j);
-                    if (prevPlanets[i] < 0 || prevPlanets[i] < transitions.get(i, j))
-                        return false;
-                } else {
-                    arrivals[i] += transitions.get(j, i);
-                    planets[j] -= transitions.get(j, i);
-                    if (prevPlanets[j] < 0 || prevPlanets[j] < transitions.get(j, i))
-                        return false;
-                }
-            }
-        }
-        return true;
     }
 
     private static List<List<AsymmetricMatrix>> guessGoodPlans(PlanetWarsState state) {
@@ -381,13 +310,13 @@ public class MyBot {
                         int requiredNumShips = -planets[i] + 1;
                         int distance;
                         if (j < i)
-                            distance = state.getDistances()[i][j];
+                            distance = distances[i][j];
                         else
-                            distance = state.getDistances()[j][i];
+                            distance = distances[j][i];
                         for (int t = 0; t < distance && t < state.getArrivalsInTime().size(); ++t) {
                             requiredNumShips += -state.getArrivalsInTime().get(t)[i];
                             if (owners[i] == -1) {
-                                requiredNumShips += state.getGrowth()[i];
+                                requiredNumShips += growth[i];
                             }
                         }
                         if (planets[j] > requiredNumShips && requiredNumShips > 0) {
@@ -418,13 +347,13 @@ public class MyBot {
                         int requiredNumShips = -planets[i] + 1;
                         int distance;
                         if (j < i)
-                            distance = state.getDistances()[i][j];
+                            distance = distances[i][j];
                         else
-                            distance = state.getDistances()[j][i];
+                            distance = distances[j][i];
                         for (int t = 0; t < distance && t < state.getArrivalsInTime().size(); ++t) {
                             requiredNumShips += -state.getArrivalsInTime().get(t)[i];
                             if (owners[i] == -1) {
-                                requiredNumShips += state.getGrowth()[i];
+                                requiredNumShips += growth[i];
                             }
                         }
                         if (planets[j] * (1.0 - defenseFactor) > requiredNumShips && requiredNumShips > 0) {
@@ -482,13 +411,13 @@ public class MyBot {
                         int requiredNumShips = -planets[i] + 1;
                         int distance;
                         if (j < i)
-                            distance = state.getDistances()[i][j];
+                            distance = distances[i][j];
                         else
-                            distance = state.getDistances()[j][i];
+                            distance = distances[j][i];
                         for (int t = 0; t < distance && t < state.getArrivalsInTime().size(); ++t) {
                             requiredNumShips += -state.getArrivalsInTime().get(t)[i];
                             if (owners[i] == -1) {
-                                requiredNumShips += state.getGrowth()[i];
+                                requiredNumShips += growth[i];
                             }
                         }
                         if (planets[j] > requiredNumShips && requiredNumShips > 0) {
