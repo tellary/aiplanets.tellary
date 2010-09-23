@@ -8,14 +8,14 @@ import java.util.*;
 public class PlanetWarsState {
     public static final int ME = 1;
     public static final int ENEMY = 2;
-    public static final int NEUTRAL = 0;
+//    public static final int NEUTRAL = 0;
 
     private List<int[]> planetsInTime;
     private List<int[]> ownersInTime;
     private List<int[]> arrivalsInTime;
 
-    private Iterator<AsymmetricMatrix> myPlan;
-    private Iterator<AsymmetricMatrix> enemyPlan;
+    private Iterator<SquareMatrix> myPlan;
+    private Iterator<SquareMatrix> enemyPlan;
 
     private int currentTurn;
 
@@ -28,11 +28,11 @@ public class PlanetWarsState {
         this.arrivalsInTime = arrivalsInTime;
     }
 
-    public void setMyPlan(Iterator<AsymmetricMatrix> myPlan) {
+    public void setMyPlan(Iterator<SquareMatrix> myPlan) {
         this.myPlan = myPlan;
     }
 
-    public void setEnemyPlan(Iterator<AsymmetricMatrix> enemyPlan) {
+    public void setEnemyPlan(Iterator<SquareMatrix> enemyPlan) {
         this.enemyPlan = enemyPlan;
     }
 
@@ -90,8 +90,22 @@ public class PlanetWarsState {
         }
         int[] owners = new int[planetsAmount];
 
+        SquareMatrix myTransitions = null;
+        if (myPlan.hasNext()) {
+            myTransitions = myPlan.next();
+        }
+        SquareMatrix enemyTransitions = null;
+        if (enemyPlan.hasNext()) {
+            enemyTransitions = enemyPlan.next();
+        }
+
         for (int i = 0; i < planets.length; ++i) {
             planets[i] = (arrivals == null? 0:arrivals[i]) + prevOwners[i] * MyBot.growth[i] + prevPlanets[i];
+            if (applyTransitions(myTransitions, i, prevPlanets, planets) != Result.SUCCESS)
+                return turn(Result.FAILED);
+            if (applyTransitions(enemyTransitions, i, prevPlanets, planets) != Result.SUCCESS) {
+                return turn(Result.FAILED);
+            }
             if (prevPlanets[i] < 0) {
                 if (planets[i] > 0)
                     owners[i] = 1;
@@ -107,48 +121,43 @@ public class PlanetWarsState {
         planetsInTime.add(planets);
         ownersInTime.add(owners);
 
-
-        if (!myPlan.hasNext() && arrivals == null)
+        if (!myPlan.hasNext() && !enemyPlan.hasNext() && arrivals == null)
             return turn(Result.FINISHED);
-        if (!myPlan.hasNext())
-            return turn(Result.SUCCESS);
-        AsymmetricMatrix myTransitions = myPlan.next();
 
+        return turn(Result.SUCCESS);
+    }
+
+    private Result applyTransitions(SquareMatrix transitions, int i, int[] prevPlanets, int[] planets) {
+        if (transitions == null)
+            return Result.SUCCESS;
+        int[] arrivals = null;
         int[][] distances = MyBot.distances;
-        for (int i = 0; i < myTransitions.size(); ++i) {
-            for (int j = 0; j < i; ++j) {
-                if (myTransitions.get(i,j) == 0)
-                    continue;
-                int distance = distances[i][j];
-                if (distance == 0)
-                    continue;
+        for (int j = 0; j < planets.length; ++j) {
+            if (transitions.get(i,j) == 0)
+                continue;
+            int distance = distances[i][j];
+            if (distance == 0)
+                continue;
 
-                distance += currentTurn - 1;
+            distance += currentTurn - 1;
 
-                ListIterator<int[]> iter = arrivalsInTime.listIterator();
-                for (int a = 0; a < distance; ++a) {
-                    if (iter.hasNext())
-                        arrivals = iter.next();
-                    else {
-                        iter.add(arrivals = new int[planetsAmount]);
-                    }
-                }
-                if (arrivals == null)
-                    throw new RuntimeException();
-
-                if (myTransitions.get(i, j) > 0) {
-                    arrivals[j] += myTransitions.get(i, j);
-                    planets[i] -= myTransitions.get(i, j);
-                    if (prevPlanets[i] < 0 || prevPlanets[i] < myTransitions.get(i, j))
-                        return turn(Result.FAILED);
-                } else {
-                    arrivals[i] += myTransitions.get(j, i);
-                    planets[j] -= myTransitions.get(j, i);
-                    if (prevPlanets[j] < 0 || prevPlanets[j] < myTransitions.get(j, i))
-                        return turn(Result.FAILED);
+            ListIterator<int[]> iter = arrivalsInTime.listIterator();
+            for (int a = 0; a < distance; ++a) {
+                if (iter.hasNext())
+                    arrivals = iter.next();
+                else {
+                    iter.add(arrivals = new int[transitions.size()]);
                 }
             }
+            if (arrivals == null)
+                throw new RuntimeException();
+
+            arrivals[j] += transitions.get(i, j);
+            planets[i] -= transitions.get(i, j);
+            if (prevPlanets[i] < 0 || prevPlanets[i] < transitions.get(i, j))
+                return Result.FAILED;
         }
-        return turn(Result.SUCCESS);
+
+        return Result.SUCCESS;
     }
 }

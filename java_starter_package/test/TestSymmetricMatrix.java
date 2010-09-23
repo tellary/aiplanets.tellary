@@ -9,14 +9,14 @@ import org.junit.Test;
 public class TestSymmetricMatrix {
     @Test
     public void testRW() {
-        AsymmetricMatrix sm = new AsymmetricMatrix(2);
+        SquareMatrix sm = new SquareMatrix(2);
         sm.set(0,1,8);
         Assert.assertEquals(8, sm.get(0,1));
     }
 
     @Test
     public void testSym() {
-        AsymmetricMatrix sm = new AsymmetricMatrix(3);
+        SquareMatrix sm = new SquareMatrix(3);
         sm.set(2, 1, 21);
         Assert.assertEquals(-21, sm.get(1,2));
         sm.set(0, 1, 1);
