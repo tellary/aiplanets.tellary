@@ -78,6 +78,7 @@ public class PlanetWarsState {
         return result;
     }
 
+
     public Result evaluateTurn() {
         int[] prevPlanets = planetsInTime.get(currentTurn);
         int[] prevOwners = ownersInTime.get(currentTurn);
@@ -100,10 +101,17 @@ public class PlanetWarsState {
         }
 
         for (int i = 0; i < planets.length; ++i) {
-            planets[i] = (arrivals == null? 0:arrivals[i]) + prevOwners[i] * MyBot.growth[i] + prevPlanets[i];
-            if (applyTransitions(myTransitions, i, prevPlanets, planets) != Result.SUCCESS)
+            int arrivalsForPlanet = (arrivals == null? 0:arrivals[i]);
+            if (Log.isEnabled()) {
+                StringBuilder sb = new StringBuilder("evaluateTurn arrivals: planet ");
+                MyBot.printPlanet(sb, prevPlanets, prevOwners, i);
+                sb.append(", turn: ").append(currentTurn).append(", arrivals: ").append(arrivalsForPlanet);
+                Log.log(sb.toString());
+            }
+            planets[i] = arrivalsForPlanet + prevOwners[i] * MyBot.growth[i] + prevPlanets[i];
+            if (applyTransitions(myTransitions, i, prevPlanets, prevOwners, planets) != Result.SUCCESS)
                 return turn(Result.FAILED);
-            if (applyTransitions(enemyTransitions, i, prevPlanets, planets) != Result.SUCCESS) {
+            if (applyTransitions(enemyTransitions, i, prevPlanets, prevOwners, planets) != Result.SUCCESS) {
                 return turn(Result.FAILED);
             }
             if (prevPlanets[i] < 0) {
@@ -117,6 +125,11 @@ public class PlanetWarsState {
                 else
                     owners[i] = prevOwners[i];
             }
+            if (Log.isEnabled()) {
+                StringBuilder sb = new StringBuilder("evaluateTurn planet: ");
+                MyBot.printPlanet(sb, planets, owners, i);
+                Log.log(sb.toString());
+            }
         }
         planetsInTime.add(planets);
         ownersInTime.add(owners);
@@ -127,7 +140,7 @@ public class PlanetWarsState {
         return turn(Result.SUCCESS);
     }
 
-    private Result applyTransitions(SquareMatrix transitions, int i, int[] prevPlanets, int[] planets) {
+    private Result applyTransitions(SquareMatrix transitions, int i, int[] prevPlanets, int[] prevOwners, int[] planets) {
         if (transitions == null)
             return Result.SUCCESS;
         int[] arrivals = null;
@@ -135,11 +148,26 @@ public class PlanetWarsState {
         for (int j = 0; j < planets.length; ++j) {
             if (transitions.get(i,j) == 0)
                 continue;
+
+            if (Log.isEnabled()) {
+                StringBuilder sb = new StringBuilder("Going to apply transition from planet ");
+                MyBot.printPlanet(sb, prevPlanets, prevOwners, i);
+                sb.append(" to planet ");
+                MyBot.printPlanet(sb, prevPlanets, prevOwners, j);
+                sb.append(", num ships: ").append(transitions.get(i, j));
+                sb.append(", distance: ").append(distances[i][j]);
+                Log.log(sb.toString());
+            }
+
+            if (prevPlanets[i]*transitions.get(i, j) < 0)
+                return Result.FAILED;
+            if (prevPlanets[i] > 0 && prevPlanets[i] < transitions.get(i, j))
+                return Result.FAILED;
+            if (prevPlanets[i] < 0 && prevPlanets[i] > transitions.get(i, j))
+                return Result.FAILED;
             int distance = distances[i][j];
             if (distance == 0)
                 continue;
-
-            distance += currentTurn - 1;
 
             ListIterator<int[]> iter = arrivalsInTime.listIterator();
             for (int a = 0; a < distance; ++a) {
@@ -154,8 +182,6 @@ public class PlanetWarsState {
 
             arrivals[j] += transitions.get(i, j);
             planets[i] -= transitions.get(i, j);
-            if (prevPlanets[i] < 0 || prevPlanets[i] < transitions.get(i, j))
-                return Result.FAILED;
         }
 
         return Result.SUCCESS;

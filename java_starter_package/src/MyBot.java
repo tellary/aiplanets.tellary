@@ -1,7 +1,10 @@
 import java.util.*;
 
 public class MyBot {
-    private static int turn = 0;
+    private static final long TIMEOUT = 500;
+    private static final long TIMESTOP = TIMEOUT - 50;
+
+    public static int turn = 0;
     private static long start;
 
     public static int[][] distances;
@@ -129,15 +132,37 @@ public class MyBot {
 
     private static List<SquareMatrix> findBestPlan(PlanetWarsState state, List<List<SquareMatrix>> plans) {
         List<SquareMatrix> bestPlan = plans.get(0);
+        if (Log.isEnabled()) {
+            Log.log("Going to score plan 0");
+            Log.log(planToString(state, bestPlan));
+        }
+
         int bestScore = score(state, bestPlan);
+        if (Log.isEnabled())
+            Log.log("Plan scored: score " + bestScore + " for plan 0");
 
         for (int i = 1; i < plans.size(); ++i) {
+            if (Log.isEnabled()) {
+                Log.log("Going to score plan " + i);
+                Log.log(planToString(state, plans.get(i)));
+            }
             int score = score(state, plans.get(i));
             if (shouldStop())
                 return bestPlan;
             if (score > bestScore) {
+                if (Log.isEnabled()) {
+                    StringBuilder sb = new StringBuilder("Plan scored: new best score ").append(score).append(" instead of ").
+                            append(bestScore).append(" for plan ").append(i);
+                    Log.log(sb.toString());
+                }
                 bestScore = score;
                 bestPlan = plans.get(i);
+            } else {
+                if (Log.isEnabled()) {
+                    StringBuilder sb = new StringBuilder("Plan scored: score ").append(score)
+                            .append(" for plan ").append(i);
+                    Log.log(sb.toString());
+                }
             }
         }
         return bestPlan;
@@ -148,32 +173,52 @@ public class MyBot {
         if ("true".equals(System.getProperty("debug"))) {
             return false;
         }
-        return System.currentTimeMillis() - start > 800;
+        boolean shouldExit = System.currentTimeMillis() - start > TIMESTOP;
+        if (shouldExit) {
+            Log.log(turn, "Exiting by timeout");
+        }
+        return shouldExit;
     }
 
-    private static int score(PlanetWarsState state, List<SquareMatrix> plan) {
+    private static int score(PlanetWarsState initialState, List<SquareMatrix> plan) {
         List<List<SquareMatrix>> antiPlans = new LinkedList<List<SquareMatrix>>();
-        antiPlans.add(doNothingPlan(state));
-//        antiPlans.add(attackSourcePlanetAntiPlan(state, plan));
+        antiPlans.add(doNothingPlan(initialState));
+        antiPlans.addAll(AttackTargetPlanetAntiPlans.attackTargetPlanetAntiPlans(initialState, plan));
+        antiPlans.addAll(AttackSourcePlanetAntiPlans.attackSourcePlanetAntiPlans(initialState, plan));
+//        antiPlans.add(attackWeakestPlanetAntiPlan(state));
 
         int worseScore = Integer.MAX_VALUE;
         for (List<SquareMatrix> antiPlan : antiPlans) {
-            state = state.copy();
+            PlanetWarsState state = initialState.copy();
+            if (Log.isEnabled()) {
+                Log.log("Processing anti plan");
+                Log.log(planToString(state, antiPlan));
+            }
+
 
             state.setMyPlan(plan.iterator());
             state.setEnemyPlan(antiPlan.iterator());
             Result result;
             //noinspection StatementWithEmptyBody
-            while ((result = state.evaluateTurn()) == Result.SUCCESS);
+            for (int i = 0; i < maxDistance; ++i) {
+                result = state.evaluateTurn();
+                if (result == Result.FAILED)
+                    return Integer.MAX_VALUE;
+            }
 
-            if (result == Result.FAILED)
-                return Integer.MIN_VALUE;
-
-//        return scoreNumShipsCoulomb(state);
+//        int score = scoreNumShipsCoulomb(state);
             int score = scoreNumShips(state);
 //            int score = scoreNumPlanets(state);
             if (score < worseScore) {
+                if (Log.isEnabled()) {
+                    StringBuilder sb = new StringBuilder("Processed anti-plan: new worseScore ").append(score).
+                            append(" instead of ").append(worseScore);
+                    Log.log(sb.toString());
+                }
                 worseScore = score;
+            } else if (Log.isEnabled()) {
+                StringBuilder sb = new StringBuilder("Anti-plan processed : score ").append(score);
+                Log.log(sb.toString());
             }
         }
         return worseScore;
@@ -184,10 +229,11 @@ public class MyBot {
         int[] lastOwners = state.getOwnersInTime().get(state.getOwnersInTime().size() - 1);
         int sumShips = 0;
         for (int i = 0; i < lastPlanets.length; ++i) {
-            if (lastOwners[i] != 0) {
-                sumShips += lastPlanets[i];
-//                sumShips += 1000 * growth[i];
-            }
+//            if (lastOwners[i] > 0) {
+            sumShips += lastPlanets[i];
+//            int growthDelta = lastOwners[i] * 200 * growth[i];
+//            sumShips += growthDelta;
+//            }
         }
         return sumShips;
     }
@@ -221,45 +267,102 @@ public class MyBot {
         return numPlanets;
     }
 
-    private static List<SquareMatrix> attackSourcePlanetAntiPlan(PlanetWarsState state, List<SquareMatrix> plan) {
-        SquareMatrix firstTurn = plan.get(0);
+    private static List<SquareMatrix> attackWeakestPlanetAntiPlan(PlanetWarsState state) {
+        int[] planets = state.getPlanetsInTime().get(0);
+        int[] owners = state.getOwnersInTime().get(0);
 
-        SquareMatrix antiTurn = new SquareMatrix(firstTurn.size());
+        SquareMatrix antiTurn = new SquareMatrix(planets.length);
         List<SquareMatrix> antiPlan = new LinkedList<SquareMatrix>();
         antiPlan.add(antiTurn);
 
-        int[] planets = state.getPlanetsInTime().get(0);
-        int[] owners = state.getOwnersInTime().get(0);
-        for (int i = 0; i < firstTurn.size(); ++i) {
-            for (int j = 0; j < firstTurn.size(); ++j) {
-                if (firstTurn.get(i, j) > 0) {
-                    for (int k = 0; k < planets.length; ++k) {
-                        int requiredNumShips = planets[i] - firstTurn.get(i, j) + growth[i] * distances[k][i] + 1;
-                        if (owners[k] == -1 && -planets[k] > requiredNumShips) {
-                            antiTurn.set(k, i, requiredNumShips);
-                        }
-                    }
+        int weakest = Integer.MAX_VALUE;
+        int weakestId = -1;
+        int strongest = Integer.MIN_VALUE;
+        int strongestId = -1;
+        for (int i = 0; i < planets.length; ++i) {
+            if (owners[i] == 1) {
+                if (weakest > planets[i]) {
+                    weakest = planets[i];
+                    weakestId = i;
+                }
+            } else if (owners[i] == -1) {
+                if (strongest < -planets[i]) {
+                    strongest = planets[i];
+                    strongestId = i;
                 }
             }
         }
 
+        int requiredNumShips = planets[weakestId] + growth[weakestId] * distances[strongestId][weakestId] + 1;
+        if (strongest > requiredNumShips)
+            antiTurn.set(strongestId, weakestId, -requiredNumShips);
+
         return antiPlan;
+    }
+
+    public static void printPlanet(StringBuilder sb, int[] planets, int[] owners, int i) {
+        sb.append(i).append("(").
+                append(planets[i]).append("/").
+                append(owners[i]).append("/").
+                append(growth[i]).append(")");
+    }
+
+    private static String planToString(PlanetWarsState state, List<SquareMatrix> plan) {
+        StringBuilder sb = new StringBuilder();
+        int[] planets = state.getPlanetsInTime().get(0);
+        int[] owners = state.getOwnersInTime().get(0);
+        for (int t = 0; t < plan.size(); ++t) {
+            sb.append("\n");
+            sb.append("Print plan t: ").append(t).append(" - ");
+            SquareMatrix tr = plan.get(t);
+            for (int i = 0; i < tr.size(); ++i) {
+                for (int j = 0; j < tr.size(); ++j) {
+                    if (tr.get(i, j) != 0) {
+                        printPlanet(sb, planets, owners, i);
+                        sb.append(", ");
+                        printPlanet(sb, planets, owners, j);
+                        sb.append(", num ships: ").append(tr.get(i, j));
+                        sb.append(", distance: ").append(distances[i][j]);
+                    }
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    public static int calculateAroundShips(PlanetWarsState state, int sourcePlanetId, int targetPlanetId) {
+        int[] planets = state.getPlanetsInTime().get(0);
+        int[] owners = state.getOwnersInTime().get(0);
+        int sourceOwner = owners[sourcePlanetId];
+
+        int aroundShips = 0;
+        for (int i = 0; i < planets.length; ++i) {
+            if (i == sourcePlanetId || i == targetPlanetId) {
+                continue;
+            }
+            if (owners[i] * sourceOwner == -1 && distances[i][targetPlanetId] < distances[sourcePlanetId][targetPlanetId]) {
+                aroundShips += owners[i] * planets[i];
+            }
+        }
+
+        return aroundShips;
     }
 
     private static List<List<SquareMatrix>> guessGoodPlans(PlanetWarsState state) {
         List<List<SquareMatrix>> plan = new ArrayList<List<SquareMatrix>>();
         plan.add(doNothingPlan(state));
-        plan.addAll(takeOnePlanetPlans(state));
-        plan.addAll(takeOnePlanetWithDefensePlans(state, 0.7f));
-        plan.addAll(takeOnePlanetWithDefensePlans(state, 0.5f));
-        plan.addAll(takeOnePlanetWithDefensePlans(state, 0.3f));
-        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.7));
-        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.3));
-        plan.addAll(onePlanetDefenseAnotherPlans(state, 0.1));
-//        plan.addAll(exchangeShipsPlan(state, 0.9));
-//        plan.addAll(exchangeShipsPlan(state, 0.6));
+        plan.addAll(takeOnePlanetPlans(state, 0));
+        for (int i = 95; i >= 0; i-=15) {
+            plan.addAll(takeOnePlanetPlans(state, ((float) (100 - i)) / 100));
+        }
+        for (int i = 95; i >= 0; i-=15) {
+            plan.addAll(onePlanetDefenseAnotherPlans(state, ((float) (100 - i)) / 100));
+        }
+
+        plan.addAll(exchangeShipsPlan(state, 0.9));
+        plan.addAll(exchangeShipsPlan(state, 0.6));
         plan.addAll(exchangeShipsPlan(state, 0.3));
-//        plan.addAll(exchangeShipsPlan(state, 0.1));
+        plan.addAll(exchangeShipsPlan(state, 0.1));
         plan.add(attackAllPlanetsPlan(state));
 
         return plan;
@@ -331,40 +434,39 @@ public class MyBot {
         return transitionsInTime;
     }
 
-    private static List<List<SquareMatrix>> takeOnePlanetPlans(PlanetWarsState state) {
+    private static int requiredNumShips(PlanetWarsState state, int source, int target) {
         int[] planets = state.getPlanetsInTime().get(0);
         int[] owners = state.getOwnersInTime().get(0);
 
-        List<List<SquareMatrix>> plans = new ArrayList<List<SquareMatrix>>();
-
-        for (int i = 0; i < planets.length; ++i) {
-            if (owners[i] < 1) {
-                for (int j = 0; j < planets.length; ++j) {
-                    if (owners[j] == 1) {
-                        int requiredNumShips = -planets[i] + 1;
-                        int distance = distances[i][j];
-                        for (int t = 0; t < distance && t < state.getArrivalsInTime().size(); ++t) {
-                            requiredNumShips += -state.getArrivalsInTime().get(t)[i];
-                            if (owners[i] == -1) {
-                                requiredNumShips += growth[i];
-                            }
-                        }
-                        if (planets[j] > requiredNumShips && requiredNumShips > 0) {
-                            SquareMatrix transitions = new SquareMatrix(planets.length);
-                            List<SquareMatrix> transitionsInTime = new LinkedList<SquareMatrix>();
-                            transitions.set(j, i, requiredNumShips);
-                            transitionsInTime.add(transitions);
-                            plans.add(transitionsInTime);
-                        }
-                    }
-                }
-            }
+        int requiredNumShips = -planets[target] + 1;
+        int distance = distances[source][target];
+        for (int t = 0; t < distance; ++t) {
+            if (t < state.getArrivalsInTime().size())
+                requiredNumShips += -state.getArrivalsInTime().get(t)[target];
+            requiredNumShips += -owners[target]*growth[target];
         }
-
-        return plans;
+        return requiredNumShips;
     }
 
-    private static List<List<SquareMatrix>> takeOnePlanetWithDefensePlans(PlanetWarsState state, float defenseFactor) {
+    public static int requiredNumShipsForAttackAntiPlan(PlanetWarsState state, int source, int target) {
+        int[] planets = state.getPlanetsInTime().get(0);
+        int[] owners = state.getOwnersInTime().get(0);
+
+        int requiredNumShips;
+        if (owners[target] == 1)
+            requiredNumShips = planets[target] + 1;
+        else
+            requiredNumShips = -planets[target] + 1;
+        int distance = distances[source][target];
+        for (int t = 0; t < distance; ++t) {
+            if (t < state.getArrivalsInTime().size())
+                requiredNumShips += state.getArrivalsInTime().get(t)[target];
+            requiredNumShips += owners[target]*growth[target];
+        }
+        return requiredNumShips;
+    }
+
+    private static List<List<SquareMatrix>> takeOnePlanetPlans(PlanetWarsState state, float defenseFactor) {
         int[] planets = state.getPlanetsInTime().get(0);
         int[] owners = state.getOwnersInTime().get(0);
 
@@ -374,18 +476,8 @@ public class MyBot {
             if (owners[i] < 1) {
                 for (int j = 0; j < planets.length; ++j) {
                     if (owners[j] == 1) {
-                        int requiredNumShips = -planets[i] + 1;
-                        int distance;
-                        if (j < i)
-                            distance = distances[i][j];
-                        else
-                            distance = distances[j][i];
-                        for (int t = 0; t < distance && t < state.getArrivalsInTime().size(); ++t) {
-                            requiredNumShips += -state.getArrivalsInTime().get(t)[i];
-                            if (owners[i] == -1) {
-                                requiredNumShips += growth[i];
-                            }
-                        }
+                        int requiredNumShips = requiredNumShips(state, j, i);
+//                        requiredNumShips += calculateAroundShips(state, j, i);
                         if (planets[j] * (1.0 - defenseFactor) > requiredNumShips && requiredNumShips > 0) {
                             SquareMatrix transitions = new SquareMatrix(planets.length);
                             transitions.set(j, i, requiredNumShips);
@@ -412,7 +504,7 @@ public class MyBot {
                 if (owners[i] != -1) {
                     if (state.getArrivalsInTime().get(t)[i] < 0) {
                         for (int j = 0; j < planets.length; ++j) {
-                            if (i != j) {
+                            if (i != j && owners[j] == 1) {
                                 SquareMatrix tr = new SquareMatrix(planets.length);
                                 tr.set(j, i, (int) (planets[j] * factor));
                                 List<SquareMatrix> transitionsInTime = new LinkedList<SquareMatrix>();

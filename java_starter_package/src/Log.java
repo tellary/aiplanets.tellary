@@ -9,7 +9,13 @@ import java.io.Writer;
  * Time: 11:17:51 PM
  */
 public class Log {
-    private static boolean enabled = Boolean.valueOf(System.getProperty("debug", "false"));
+    private static final boolean enabled;
+    static {
+        boolean log = Boolean.valueOf(System.getProperty("log", "false"));
+        if (!log)
+            log = Boolean.valueOf(System.getProperty("debug", "false"));
+        enabled = log;
+    }
     private static Writer writer;
     private static long startTime = System.currentTimeMillis();
 
@@ -24,6 +30,9 @@ public class Log {
         return writer;
     }
 
+    public static void log(String message) {
+        log(MyBot.turn, message);
+    }
     public static void log(int turn, String message) {
         if (enabled) {
             StringBuilder sb = new StringBuilder();
@@ -45,5 +54,9 @@ public class Log {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static boolean isEnabled() {
+        return enabled;
     }
 }
