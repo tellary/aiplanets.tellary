@@ -1,4 +1,4 @@
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * Created by Silvestrov Ilya
@@ -7,19 +7,17 @@ import java.util.Arrays;
  */
 public class Test {
     public static void main(String[] args) {
-        int[][] arr = new int[2][];
+        List<Integer> list = new ArrayList<Integer>();
+        list.add(0);
 
-        arr[0] = new int[2];
-        arr[1] = new int[1];
+        ListIterator<Integer> iter = list.listIterator();
+        System.out.println(iter.next());
 
-        arr[0][0] = 1;
-        arr[0][1] = 2;
-        arr[1][0] = 3;
-        arr[1][1] = 3;
+        System.out.println(iter.hasNext());
 
-        for (int[] a : arr) {
-            System.out.println(Arrays.toString(a));
-        }
+        iter.add(1);
+        iter.add(2);
 
+        System.out.println(Arrays.toString(list.toArray()));
     }
 }

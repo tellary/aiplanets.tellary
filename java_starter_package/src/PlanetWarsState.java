@@ -108,23 +108,38 @@ public class PlanetWarsState {
                 sb.append(", turn: ").append(currentTurn).append(", arrivals: ").append(arrivalsForPlanet);
                 Log.log(sb.toString());
             }
-            planets[i] = arrivalsForPlanet + prevOwners[i] * MyBot.growth[i] + prevPlanets[i];
+            
             if (applyTransitions(myTransitions, i, prevPlanets, prevOwners, planets) != Result.SUCCESS)
                 return turn(Result.FAILED);
             if (applyTransitions(enemyTransitions, i, prevPlanets, prevOwners, planets) != Result.SUCCESS) {
                 return turn(Result.FAILED);
             }
-            if (prevPlanets[i] < 0) {
-                if (planets[i] > 0)
-                    owners[i] = 1;
-                else
-                    owners[i] = prevOwners[i];
+
+            if (!(arrivalsForPlanet < 0 && prevOwners[i] == 0)) {
+                planets[i] += arrivalsForPlanet + prevOwners[i] * MyBot.growth[i] + prevPlanets[i];
+                if (prevPlanets[i] < 0) {
+                    if (planets[i] > 0)
+                        owners[i] = 1;
+                    else
+                        owners[i] = prevOwners[i];
+                } else {
+                    if (planets[i] < 0)
+                        owners[i] = -1;
+                    else
+                        owners[i] = prevOwners[i];
+                }
             } else {
-                if (planets[i] < 0)
+                planets[i] += arrivalsForPlanet + prevOwners[i] * MyBot.growth[i] - prevPlanets[i];
+                if (planets[i] > 0) {
+                    owners[i] = 0;
+                    planets[i] = -planets[i];
+                } else {
                     owners[i] = -1;
-                else
-                    owners[i] = prevOwners[i];
+                }
             }
+
+
+
             if (Log.isEnabled()) {
                 StringBuilder sb = new StringBuilder("evaluateTurn planet: ");
                 MyBot.printPlanet(sb, planets, owners, i);
@@ -170,7 +185,7 @@ public class PlanetWarsState {
                 continue;
 
             ListIterator<int[]> iter = arrivalsInTime.listIterator();
-            for (int a = 0; a < distance; ++a) {
+            for (int a = 0; a < currentTurn + distance; ++a) {
                 if (iter.hasNext())
                     arrivals = iter.next();
                 else {

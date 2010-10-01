@@ -1,8 +1,12 @@
 import java.util.*;
 
 public class MyBot {
-    private static final long TIMEOUT = 500;
-    private static final long TIMESTOP = TIMEOUT - 50;
+    private static final boolean SKIP_ON_ERROR = true;
+
+    private static final long TIME_DIVIDER = 1;
+    private static final long TIMEOUT = 1000;
+    @SuppressWarnings({"PointlessArithmeticExpression"})
+    private static final long TIMESTOP = (TIMEOUT - 100)/TIME_DIVIDER;
 
     public static int turn = 0;
     private static long start;
@@ -70,10 +74,21 @@ public class MyBot {
 
     private static void issueOrder(PlanetWars pw, int i, int j, int numShips) {
         Log.log(turn, "Issuing order: " + i + " " + j + " " + numShips);
-        if (pw.getPlanet(i).getOwner() != PlanetWarsState.ME)
-            Log.log(turn, "Not my planet!");
-        if (pw.getPlanet(i).getNumShips() < numShips)
-            Log.log(turn, "Not enough ships!");
+        if (pw.getPlanet(i).getOwner() != PlanetWarsState.ME) {
+            Log.error("Not my planet!");
+            if (SKIP_ON_ERROR)
+                return;
+        }
+        if (pw.getPlanet(i).getNumShips() < numShips) {
+            Log.error("Not enough ships!");
+            if (SKIP_ON_ERROR)
+                return;
+        }
+        if (numShips < 0) {
+            Log.error("Negative ships!");
+            if (SKIP_ON_ERROR)
+                return;
+        }
         pw.IssueOrder(i, j, numShips);
     }
 
@@ -185,7 +200,7 @@ public class MyBot {
         antiPlans.add(doNothingPlan(initialState));
         antiPlans.addAll(AttackTargetPlanetAntiPlans.attackTargetPlanetAntiPlans(initialState, plan));
         antiPlans.addAll(AttackSourcePlanetAntiPlans.attackSourcePlanetAntiPlans(initialState, plan));
-//        antiPlans.add(attackWeakestPlanetAntiPlan(state));
+//        antiPlans.add(attackWeakestPlanetAntiPlan(initialState));
 
         int worseScore = Integer.MAX_VALUE;
         for (List<SquareMatrix> antiPlan : antiPlans) {
@@ -469,7 +484,7 @@ public class MyBot {
 
     private static List<List<SquareMatrix>> kickOutPlans(PlanetWarsState state) {
         int[] planets = state.getPlanetsInTime().get(0);
-        int[] owners = state.getPlanetsInTime().get(0);
+        int[] owners = state.getOwnersInTime().get(0);
         List<int[]> arrivalsInTime = state.getArrivalsInTime();
 
         List<List<SquareMatrix>> plans = new ArrayList<List<SquareMatrix>>();
@@ -479,15 +494,16 @@ public class MyBot {
             for (int i = 0; i < arrivals.length; ++i) {
                 if (arrivals[i] < 0 && owners[i] == 0) {
                     for (int j = 0; j < planets.length; ++j) {
-                        if (owners[j] > 0 && distances[i][j] <= t) {
-                            int requiredNumShips = -(arrivals[i] - planets[i] - growth[i]);
-
-                            int timeToStart = t - distances[i][j] + 1;
+                        if (owners[j] > 0) {
+                            int requiredNumShips = -(arrivals[i] - planets[i]) + growth[i] + 1;
+                            //TODO: Explain why +2?
+                            int timeToStart = t - distances[i][j] + 2;
                             int numShipsOnMyPlanet = planets[j] +  timeToStart * growth[j];
-                            if (numShipsOnMyPlanet >= requiredNumShips) {
+                            if (requiredNumShips > 0 && numShipsOnMyPlanet >= requiredNumShips) {
                                 List<SquareMatrix> plan = new ArrayList<SquareMatrix>();
                                 plans.add(plan);
-                                SquareMatrix tr = null;
+                                SquareMatrix tr;
+                                plan.add(tr = new SquareMatrix(planets.length));
                                 for (int k = 0; k < timeToStart; ++k) {
                                     plan.add(tr = new SquareMatrix(planets.length));
                                 }

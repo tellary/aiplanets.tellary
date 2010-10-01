@@ -10,11 +10,18 @@ import java.io.Writer;
  */
 public class Log {
     private static final boolean enabled;
+
+    private static final boolean error;
+
     static {
         boolean log = Boolean.valueOf(System.getProperty("log", "false"));
         if (!log)
             log = Boolean.valueOf(System.getProperty("debug", "false"));
         enabled = log;
+        if (!log) {
+            log = Boolean.valueOf(System.getProperty("error", "false"));
+        }
+        error = log;
     }
     private static Writer writer;
     private static long startTime = System.currentTimeMillis();
@@ -44,6 +51,16 @@ public class Log {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    public static void error(String msg) {
+        try {
+            writer().write(msg);
+            writer().write("\n");
+            writer().flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
