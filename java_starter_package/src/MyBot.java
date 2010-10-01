@@ -351,6 +351,7 @@ public class MyBot {
     private static List<List<SquareMatrix>> guessGoodPlans(PlanetWarsState state) {
         List<List<SquareMatrix>> plan = new ArrayList<List<SquareMatrix>>();
         plan.add(doNothingPlan(state));
+        plan.addAll(kickOutPlans(state));
         plan.addAll(takeOnePlanetPlans(state, 0));
         for (int i = 95; i >= 0; i-=15) {
             plan.addAll(takeOnePlanetPlans(state, ((float) (100 - i)) / 100));
@@ -464,6 +465,42 @@ public class MyBot {
             requiredNumShips += owners[target]*growth[target];
         }
         return requiredNumShips;
+    }
+
+    private static List<List<SquareMatrix>> kickOutPlans(PlanetWarsState state) {
+        int[] planets = state.getPlanetsInTime().get(0);
+        int[] owners = state.getPlanetsInTime().get(0);
+        List<int[]> arrivalsInTime = state.getArrivalsInTime();
+
+        List<List<SquareMatrix>> plans = new ArrayList<List<SquareMatrix>>();
+
+        for (int t = 0; t < arrivalsInTime.size(); ++t) {
+            int[] arrivals = arrivalsInTime.get(t);
+            for (int i = 0; i < arrivals.length; ++i) {
+                if (arrivals[i] < 0 && owners[i] == 0) {
+                    for (int j = 0; j < planets.length; ++j) {
+                        if (owners[j] > 0 && distances[i][j] <= t) {
+                            int requiredNumShips = -(arrivals[i] - planets[i] - growth[i]);
+
+                            int timeToStart = t - distances[i][j] + 1;
+                            int numShipsOnMyPlanet = planets[j] +  timeToStart * growth[j];
+                            if (numShipsOnMyPlanet >= requiredNumShips) {
+                                List<SquareMatrix> plan = new ArrayList<SquareMatrix>();
+                                plans.add(plan);
+                                SquareMatrix tr = null;
+                                for (int k = 0; k < timeToStart; ++k) {
+                                    plan.add(tr = new SquareMatrix(planets.length));
+                                }
+                                //noinspection ConstantConditions
+                                tr.set(j, i, requiredNumShips);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return plans;
     }
 
     private static List<List<SquareMatrix>> takeOnePlanetPlans(PlanetWarsState state, float defenseFactor) {
