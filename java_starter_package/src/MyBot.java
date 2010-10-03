@@ -237,7 +237,7 @@ public class MyBot {
             for (int i = 0; i < maxDistance; ++i) {
                 result = state.evaluateTurn();
                 if (result == Result.FAILED)
-                    return Integer.MAX_VALUE;
+                    return Integer.MIN_VALUE;
             }
 
 //        int score = scoreNumShipsCoulomb(state);
@@ -467,7 +467,7 @@ public class MyBot {
         return transitionsInTime;
     }
 
-    private static int requiredNumShips(PlanetWarsState state, int source, int target) {
+    public static int requiredNumShips(PlanetWarsState state, int source, int target) {
         int[] planets = state.getPlanetsInTime().get(0);
         int[] owners = state.getOwnersInTime().get(0);
 
@@ -477,6 +477,12 @@ public class MyBot {
             if (t < state.getArrivalsInTime().size())
                 requiredNumShips += -state.getArrivalsInTime().get(t)[target];
             requiredNumShips += -owners[target]*growth[target];
+        }
+        for (int i = 0; i < planets.length; ++i) {
+            if (i != target && owners[i] < 0 && distances[i][target] < distances[source][target]) {
+                requiredNumShips += -planets[i];
+                requiredNumShips += growth[i] * (distances[source][target] - distances[i][target]);
+            }
         }
         return requiredNumShips;
     }
