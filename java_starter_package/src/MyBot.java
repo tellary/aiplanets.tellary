@@ -16,6 +16,9 @@ public class MyBot {
     public static int maxDistance;
 
     public static int[] growth;
+
+    public static List<List<Integer>> sortedPlanets;
+
     // The DoTurn function is where your code goes. The PlanetWars object
     // contains the state of the game, including information about all planets
     // and fleets that currently exist. Inside this function, you issue orders
@@ -32,23 +35,39 @@ public class MyBot {
             int planetsAmount = planetList.size();
 
             distances = new int[planetsAmount][planetsAmount];
+
             growth = new int[planetsAmount];
+
+            sortedPlanets = new ArrayList<List<Integer>>(planetsAmount);
+
             avgDistance = 0;
             int avgNum = 0;
             for (int i = 0; i < planetsAmount; ++i) {
                 Planet source = planetList.get(i);
+                ArrayList<Integer> sortedPlanetsRow = new ArrayList<Integer>(planetsAmount - 1);
                 for (int j = 0 ; j < planetsAmount; ++j) {
                     Planet destination = planetList.get(j);
                     double dx = source.X() - destination.X();
                     double dy = source.Y() - destination.Y();
                     distances[i][j] = (int)Math.ceil(Math.sqrt(dx * dx + dy * dy));
+
                     if (i != j) {
                         avgDistance += distances[i][j];
                         ++avgNum;
+                        sortedPlanetsRow.add(j);
                     }
                     if (distances[i][j] > maxDistance)
                         maxDistance = distances[i][j];
                 }
+                final int currentPlanet = i;
+                Collections.sort(sortedPlanetsRow, new Comparator<Integer>() {
+                    @Override
+                    public int compare(Integer planet1, Integer planet2) {
+                        return new Integer(distances[currentPlanet][planet1]).
+                                compareTo(distances[currentPlanet][planet2]);
+                    }
+                });
+                sortedPlanets.add(sortedPlanetsRow);
                 growth[i] = planetList.get(i).getGrowthRate();
             }
             avgDistance = (int) (((double)avgDistance)/avgNum);
@@ -244,11 +263,9 @@ public class MyBot {
         int[] lastOwners = state.getOwnersInTime().get(state.getOwnersInTime().size() - 1);
         int sumShips = 0;
         for (int i = 0; i < lastPlanets.length; ++i) {
-//            if (lastOwners[i] > 0) {
-            sumShips += lastPlanets[i];
-//            int growthDelta = lastOwners[i] * 200 * growth[i];
-//            sumShips += growthDelta;
-//            }
+            if (lastOwners[i] != 0) {
+                sumShips += lastPlanets[i];
+            }
         }
         return sumShips;
     }
@@ -493,7 +510,8 @@ public class MyBot {
             int[] arrivals = arrivalsInTime.get(t);
             for (int i = 0; i < arrivals.length; ++i) {
                 if (arrivals[i] < 0 && owners[i] == 0) {
-                    for (int j = 0; j < planets.length; ++j) {
+                    List<Integer> sortedPlanetsRow = sortedPlanets.get(i);
+                    for (int j : sortedPlanetsRow) {
                         if (owners[j] > 0) {
                             int requiredNumShips = -(arrivals[i] - planets[i]) + growth[i] + 1;
                             //TODO: Explain why +2?
@@ -527,7 +545,8 @@ public class MyBot {
 
         for (int i = 0; i < planets.length; ++i) {
             if (owners[i] < 1) {
-                for (int j = 0; j < planets.length; ++j) {
+                List<Integer> sortedPlanetsRow = sortedPlanets.get(i);
+                for (int j : sortedPlanetsRow) {
                     if (owners[j] == 1) {
                         int requiredNumShips = requiredNumShips(state, j, i);
 //                        requiredNumShips += calculateAroundShips(state, j, i);
