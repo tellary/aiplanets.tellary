@@ -29,7 +29,7 @@ public class AttackSourcePlanetAntiPlans {
                                 sb.append(", distance ").append(MyBot.distances[k][i]);
                                 sb.append(", victim growth ").append(MyBot.growth[i]).append(". ");
                                 sb.append("For transition of size ").append(firstTurn.get(i, j)).
-                                        append(" from ").append(i).append("(").append(planets[i]).append(") ").
+                                        append(" from ").append(i).append("(").append(planets[i]).append(")").
                                         append(" to ").append(j).append("(").append(planets[j]).append(")");
                                 Log.log(sb.toString());
                             }
@@ -51,7 +51,7 @@ public class AttackSourcePlanetAntiPlans {
                                 sb.append(requiredNumShips);
                                 Log.log(sb.toString());
                             }
-                            if (-planets[k] > requiredNumShips && requiredNumShips > 0) {
+                            if (-planets[k] >= requiredNumShips && requiredNumShips > 0) {
                                 SquareMatrix antiTurn = new SquareMatrix(firstTurn.size());
                                 List<SquareMatrix> antiPlan = new LinkedList<SquareMatrix>();
                                 antiPlan.add(antiTurn);

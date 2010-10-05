@@ -1,5 +1,3 @@
-import java.util.*;
-
 /**
  * Created by Silvestrov Ilya
  * Date: Sep 19, 2010
@@ -7,17 +5,14 @@ import java.util.*;
  */
 public class Test {
     public static void main(String[] args) {
-        List<Integer> list = new ArrayList<Integer>();
-        list.add(0);
-
-        ListIterator<Integer> iter = list.listIterator();
-        System.out.println(iter.next());
-
-        System.out.println(iter.hasNext());
-
-        iter.add(1);
-        iter.add(2);
-
-        System.out.println(Arrays.toString(list.toArray()));
+        for (int i = 95; i >= 0; i-=15) {
+            System.out.println("i=" + i);
+            double factor = ((float) (100 - i)) / 100;
+            System.out.println("factor=" + factor);
+            System.out.println("6*factor=" + 6*factor);
+            System.out.println("(int)(6*factor)=" + (int)(6*factor));
+            System.out.println("(int)(-6*factor)=" + (int)(-6*factor));
+            System.out.println("1*factor=" + (int)(1*factor));
+        }
     }
 }
