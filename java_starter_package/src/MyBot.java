@@ -467,7 +467,7 @@ public class MyBot {
         return transitionsInTime;
     }
 
-    public static int requiredNumShips(PlanetWarsState state, int source, int target) {
+    public static int requiredNumShips(PlanetWarsState state, int source, int target, boolean countGrowth) {
         int[] planets = state.getPlanetsInTime().get(0);
         int[] owners = state.getOwnersInTime().get(0);
 
@@ -476,7 +476,8 @@ public class MyBot {
         for (int t = 0; t < distance; ++t) {
             if (t < state.getArrivalsInTime().size())
                 requiredNumShips += -state.getArrivalsInTime().get(t)[target];
-            requiredNumShips += -owners[target]*growth[target];
+            if (countGrowth)
+                requiredNumShips += -owners[target]*growth[target];
         }
         for (int i = 0; i < planets.length; ++i) {
             if (i != target && owners[i] < 0 && distances[i][target] < distances[source][target]) {
@@ -515,11 +516,11 @@ public class MyBot {
         for (int t = 0; t < arrivalsInTime.size(); ++t) {
             int[] arrivals = arrivalsInTime.get(t);
             for (int i = 0; i < arrivals.length; ++i) {
-                if (arrivals[i] < 0 && owners[i] == 0) {
+                if (arrivals[i] < 0 && owners[i] == 0 && arrivals[i] < planets[i]) {
                     List<Integer> sortedPlanetsRow = sortedPlanets.get(i);
                     for (int j : sortedPlanetsRow) {
                         if (owners[j] > 0) {
-                            int requiredNumShips = -(arrivals[i] - planets[i]) + growth[i] + 1;
+                            int requiredNumShips = requiredNumShips(state, j, i, false);
                             //TODO: Explain why +2?
                             int timeToStart = t - distances[i][j] + 2;
                             int numShipsOnMyPlanet = planets[j] +  timeToStart * growth[j];
@@ -554,8 +555,7 @@ public class MyBot {
                 List<Integer> sortedPlanetsRow = sortedPlanets.get(i);
                 for (int j : sortedPlanetsRow) {
                     if (owners[j] == 1) {
-                        int requiredNumShips = requiredNumShips(state, j, i);
-//                        requiredNumShips += calculateAroundShips(state, j, i);
+                        int requiredNumShips = requiredNumShips(state, j, i, true);
                         if (planets[j] * (1.0 - defenseFactor) > requiredNumShips && requiredNumShips > 0) {
                             SquareMatrix transitions = new SquareMatrix(planets.length);
                             transitions.set(j, i, requiredNumShips);
