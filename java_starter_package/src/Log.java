@@ -55,6 +55,9 @@ public class Log {
     }
 
     public static void error(String msg) {
+        if (MyBot.SKIP_ON_ERROR)
+            return;
+        
         try {
             writer().write(msg);
             writer().write("\n");
@@ -65,6 +68,8 @@ public class Log {
     }
 
     public static void error(int turn, Throwable t) {
+        if (MyBot.SKIP_ON_ERROR)
+            return;
         t.printStackTrace(new PrintWriter(writer()));
         try {
             writer.flush();
