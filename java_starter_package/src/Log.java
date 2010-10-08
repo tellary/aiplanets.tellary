@@ -11,18 +11,13 @@ import java.io.Writer;
 public class Log {
     private static final boolean enabled;
 
-    private static final boolean error;
-
     static {
         boolean log = Boolean.valueOf(System.getProperty("log", "false"));
         if (!log)
             log = Boolean.valueOf(System.getProperty("debug", "false"));
         enabled = log;
-        if (!log) {
-            log = Boolean.valueOf(System.getProperty("error", "false"));
-        }
-        error = log;
     }
+
     private static Writer writer;
     private static long startTime = System.currentTimeMillis();
 
@@ -67,7 +62,7 @@ public class Log {
         }
     }
 
-    public static void error(int turn, Throwable t) {
+    public static void error(Throwable t) {
         if (MyBot.SKIP_ON_ERROR)
             return;
         t.printStackTrace(new PrintWriter(writer()));

@@ -11,7 +11,7 @@ import java.util.List;
  * Time: 12:30:09 AM
  */
 public class PlanSelectionWithSumAllScorerTest {
-    private List<List<SquareMatrix>> plans;
+    private List<List<SquareMatrix>> plans = null;
 
     @Before
     public void setup() {
@@ -27,16 +27,22 @@ public class PlanSelectionWithSumAllScorerTest {
 
     @Test
     public void test() {
-        PlanSelection selection = new PlanSelection();
+        PlanSelection selection;
+        selection = new PlanSelection();
+        MyBot.start = System.currentTimeMillis();
         selection.setScorer(new SumAllScorer());
 
-        selection.doPlanSelection(null, plans);
+        selection.doPlanSelection(null, new LinkedList<List<SquareMatrix>>(plans));
 
+        LinkedList<List<SquareMatrix>> plans = new LinkedList<List<SquareMatrix>>(this.plans);
+        selection = new PlanSelection();
+        selection.setScorer(new SumAllScorer());
         long time = System.currentTimeMillis();
+        MyBot.start = time;
         selection.doPlanSelection(null, plans);
         time = System.currentTimeMillis() - time;
-
         System.out.println(time);
+        
         Assert.assertEquals(100, selection.getBestPlan().get(0).get(1, 0));
     }
 }

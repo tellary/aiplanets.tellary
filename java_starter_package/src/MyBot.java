@@ -3,13 +3,13 @@ import java.util.*;
 public class MyBot {
     public static final boolean SKIP_ON_ERROR = false;
 
-    private static final long TIME_DIVIDER = 1;
+    private static final long TIME_DIVIDER = 2;
     private static final long TIMEOUT = 1000;
     @SuppressWarnings({"PointlessArithmeticExpression"})
-    private static final long TIMESTOP = (TIMEOUT - 100)/TIME_DIVIDER;
+    public static final long TIMESTOP = TIMEOUT/TIME_DIVIDER - 200;
 
     public static int turn = 0;
-    private static long start;
+    public static long start;
 
     public static int[][] distances;
     public static int avgDistance;
@@ -78,7 +78,7 @@ public class MyBot {
         try {
             transitions = selectAction(createState(pw));
         } catch (Exception e) {
-            Log.error(turn, e);
+            Log.error(e);
             return;
         }
         for (int i = 0; i < transitions.size(); ++i) {
@@ -165,54 +165,12 @@ public class MyBot {
     }
 
     private static List<SquareMatrix> findBestPlan(PlanetWarsState state, List<List<SquareMatrix>> plans) {
-        List<SquareMatrix> bestPlan = plans.get(0);
-        if (Log.isEnabled()) {
-            Log.log("Going to score plan 0");
-            Log.log(planToString(state, bestPlan));
-        }
-
-        int bestScore = score(state, bestPlan);
-        if (Log.isEnabled())
-            Log.log("Plan scored: score " + bestScore + " for plan 0");
-
-        for (int i = 1; i < plans.size(); ++i) {
-            if (Log.isEnabled()) {
-                Log.log("Going to score plan " + i);
-                Log.log(planToString(state, plans.get(i)));
-            }
-            int score = score(state, plans.get(i));
-            if (shouldStop())
-                return bestPlan;
-            if (score > bestScore) {
-                if (Log.isEnabled()) {
-                    StringBuilder sb = new StringBuilder("Plan scored: new best score ").append(score).append(" instead of ").
-                            append(bestScore).append(" for plan ").append(i);
-                    Log.log(sb.toString());
-                }
-                bestScore = score;
-                bestPlan = plans.get(i);
-            } else {
-                if (Log.isEnabled()) {
-                    StringBuilder sb = new StringBuilder("Plan scored: score ").append(score)
-                            .append(" for plan ").append(i);
-                    Log.log(sb.toString());
-                }
-            }
-        }
-        return bestPlan;
+        PlanSelection selection = new PlanSelection();
+        selection.doPlanSelection(state, plans);
+        return selection.getBestPlan();
     }
 
-    private static boolean shouldStop() {
-        //noinspection SimplifiableIfStatement
-        if ("true".equals(System.getProperty("debug"))) {
-            return false;
-        }
-        boolean shouldExit = System.currentTimeMillis() - start > TIMESTOP;
-        if (shouldExit) {
-            Log.log(turn, "Exiting by timeout");
-        }
-        return shouldExit;
-    }
+
 
     public static int score(PlanetWarsState initialState, List<SquareMatrix> plan) {
         List<List<SquareMatrix>> antiPlans = new LinkedList<List<SquareMatrix>>();
@@ -381,7 +339,7 @@ public class MyBot {
     }
 
     private static List<List<SquareMatrix>> guessGoodPlans(PlanetWarsState state) {
-        List<List<SquareMatrix>> plan = new ArrayList<List<SquareMatrix>>();
+        List<List<SquareMatrix>> plan = new LinkedList<List<SquareMatrix>>();
         plan.add(doNothingPlan(state));
         plan.addAll(kickOutPlans(state));
         plan.addAll(takeOnePlanetPlans(state, 0));
@@ -662,9 +620,9 @@ public class MyBot {
                 }
             }
         } catch (Exception e) {
-            Log.error(turn, e);
+            Log.error(e);
         } catch (Throwable t) {
-            Log.error(turn, t);
+            Log.error(t);
         }
     }
 }

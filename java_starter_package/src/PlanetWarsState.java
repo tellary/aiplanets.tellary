@@ -111,9 +111,8 @@ public class PlanetWarsState {
             
             if (applyTransitions(myTransitions, i, prevPlanets, prevOwners, planets) != Result.SUCCESS)
                 return turn(Result.FAILED);
-            if (applyTransitions(enemyTransitions, i, prevPlanets, prevOwners, planets) != Result.SUCCESS) {
+            if (applyTransitions(enemyTransitions, i, prevPlanets, prevOwners, planets) != Result.SUCCESS)
                 return turn(Result.FAILED);
-            }
 
             if (!(arrivalsForPlanet < 0 && prevOwners[i] == 0)) {
                 planets[i] += arrivalsForPlanet + prevOwners[i] * MyBot.growth[i] + prevPlanets[i];
@@ -176,10 +175,7 @@ public class PlanetWarsState {
 
             if (prevPlanets[i]*transitions.get(i, j) < 0)
                 return Result.FAILED;
-            if (prevPlanets[i] > 0 && prevPlanets[i] < transitions.get(i, j))
-                return Result.FAILED;
-            if (prevPlanets[i] < 0 && prevPlanets[i] > transitions.get(i, j))
-                return Result.FAILED;
+
             int distance = distances[i][j];
             if (distance == 0)
                 continue;
@@ -197,6 +193,10 @@ public class PlanetWarsState {
 
             arrivals[j] += transitions.get(i, j);
             planets[i] -= transitions.get(i, j);
+            if (prevPlanets[i] > 0 && prevPlanets[i] < -planets[i])
+                return Result.FAILED;
+            if (prevPlanets[i] < 0 && -prevPlanets[i] < planets[i])
+                return Result.FAILED;
         }
 
         return Result.SUCCESS;

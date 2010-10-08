@@ -57,11 +57,11 @@ public class PlanSelection {
     }
 
     public List<SquareMatrix> getBestPlan() {
-        return population.iterator().next().plan;
+        return population.first().plan;
     }
 
     public int getBestScore() {
-        return population.iterator().next().score;
+        return population.first().score;
     }
 
     public void setScorer(Scorer scorer) {
@@ -72,8 +72,12 @@ public class PlanSelection {
         List<SquareMatrix> plan;
 
         while (!planQueue.isEmpty()) {
+            if (shouldStop())
+                return;
             plan = planQueue.remove(0);
             int score = scorer.score(initialState, plan);
+            if (score == Integer.MIN_VALUE)
+                continue;
             if (population.size() == populationSize) {
                 if (score > population.last().score) {
                     population.pollLast();
@@ -88,7 +92,7 @@ public class PlanSelection {
             }
 
             population.add(new ScoredPlan(plan, score, idx));
-            ++ idx;
+            ++idx;
         }
     }
 
@@ -129,5 +133,17 @@ public class PlanSelection {
             }
         }
         return false;
+    }
+
+    private static boolean shouldStop() {
+        //noinspection SimplifiableIfStatement
+        if ("true".equals(System.getProperty("debug"))) {
+            return false;
+        }
+        boolean shouldExit = System.currentTimeMillis() - MyBot.start > MyBot.TIMESTOP;
+        if (shouldExit) {
+            Log.log(MyBot.turn, "Exiting by timeout");
+        }
+        return shouldExit;
     }
 }
