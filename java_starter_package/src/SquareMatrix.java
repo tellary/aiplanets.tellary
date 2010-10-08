@@ -1,3 +1,5 @@
+import javax.swing.*;
+
 /**
  * Created by Silvestrov Ilya
  * Date: Sep 19, 2010
@@ -22,5 +24,14 @@ public class SquareMatrix {
 
     public int size() {
         return data.length;
+    }
+
+    public SquareMatrix add(SquareMatrix tr1) {
+        for (int i = 0; i < data.length; ++i) {
+            for (int j = 0; j < data.length; ++j) {
+                data[i][j] += tr1.data[i][j];
+            }
+        }
+        return this;
     }
 }

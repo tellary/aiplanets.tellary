@@ -6,7 +6,7 @@ import org.junit.Test;
  * Date: Sep 20, 2010
  * Time: 12:02:23 AM
  */
-public class TestSymmetricMatrix {
+public class SymmetricMatrixTest {
     @Test
     public void testRW() {
         SquareMatrix sm = new SquareMatrix(2);
