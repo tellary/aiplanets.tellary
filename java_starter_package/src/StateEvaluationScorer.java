@@ -7,7 +7,7 @@ import java.util.List;
  */
 public class StateEvaluationScorer implements Scorer {
     @Override
-    public int score(PlanetWarsState state, List<SquareMatrix> plan) {
+    public int score(PlanetWarsState state, Plan plan) {
         return MyBot.score(state, plan);
     }
 }

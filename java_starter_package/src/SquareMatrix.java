@@ -1,4 +1,7 @@
 import javax.swing.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Created by Silvestrov Ilya
@@ -6,32 +9,59 @@ import javax.swing.*;
  * Time: 11:16:27 PM
  */
 public class SquareMatrix {
-    private int[][] data;
+    private Map<Integer, Map<Integer, Integer>> data;
+    private int capacity;
 
-    public SquareMatrix(int size) {
-        data = new int[size][size];
+
+    public SquareMatrix(int capacity) {
+        this.capacity = capacity;
+        data = new HashMap<Integer, Map<Integer, Integer>>(capacity);
     }
 
     public void set(int i, int j, int val) {
-        data[i][j] = val;
+        if (val == 0)
+            return;
+        Map<Integer, Integer> toRow = data.get(i);
+        if (toRow == null) {
+            toRow = new HashMap<Integer, Integer>(capacity);
+            data.put(i, toRow);
+        }
+        toRow.put(j, val);
     }
 
     public int get(int i, int j) {
-        if (i == j)
+        Map<Integer, Integer> toRow = data.get(i);
+        if (toRow == null)
             return 0;
-        return data[i][j];
+        Integer value = toRow.get(j);
+        if (value == null)
+            return 0;
+        else
+            return value;
     }
 
     public int size() {
-        return data.length;
+        return capacity;
     }
 
     public SquareMatrix add(SquareMatrix tr1) {
-        for (int i = 0; i < data.length; ++i) {
-            for (int j = 0; j < data.length; ++j) {
-                data[i][j] += tr1.data[i][j];
+        for (int i = 0; i < capacity; ++i) {
+            for (int j = 0; j < capacity; ++j) {
+                Map<Integer, Integer> tr1ToRow = tr1.data.get(i);
+                if (tr1ToRow == null)
+                    continue;
+                Integer tr1Value = tr1ToRow.get(j);
+                if (tr1Value == null)
+                    continue;
+
+                int value = get(i, j);
+                set(i, j, value + tr1Value);
             }
         }
         return this;
+    }
+
+    public boolean isEmpty() {
+        return data.isEmpty();
     }
 }

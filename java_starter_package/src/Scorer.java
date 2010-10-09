@@ -6,5 +6,5 @@ import java.util.List;
  * Time: 12:00:51 AM
  */
 public interface Scorer {
-    int score (PlanetWarsState state, List<SquareMatrix> plan);
+    int score(PlanetWarsState state, Plan plan);
 }

@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -8,11 +7,15 @@ import java.util.List;
  * Time: 8:22:27 AM
  */
 public class AttackTargetPlanetAntiPlans {
-    public static List<List<SquareMatrix>> attackTargetPlanetAntiPlans(
-            PlanetWarsState state, List<SquareMatrix> plan) {
-        SquareMatrix firstTurn = plan.get(0);
+    public static List<Plan> attackTargetPlanetAntiPlans(
+            PlanetWarsState state, Plan plan) {
 
-        List<List<SquareMatrix>> plans = new ArrayList<List<SquareMatrix>>();
+        List<Plan> plans = new LinkedList<Plan>();
+        if (plan.isEmpty())
+            return plans;
+
+        SquareMatrix firstTurn = plan.transitions().iterator().next();
+
 
         int[] planets = state.getPlanetsInTime().get(0);
         int[] owners = state.getOwnersInTime().get(0);
@@ -53,8 +56,8 @@ public class AttackTargetPlanetAntiPlans {
                             }
                             if (-planets[k] > requiredNumShips && requiredNumShips > 0) {
                                 SquareMatrix antiTurn = new SquareMatrix(firstTurn.size());
-                                List<SquareMatrix> antiPlan = new LinkedList<SquareMatrix>();
-                                antiPlan.add(antiTurn);
+                                Plan antiPlan = new Plan();
+                                antiPlan.addTransitions(antiTurn);
                                 antiTurn.set(k, j, -requiredNumShips);
                                 if (Log.isEnabled()) {
                                     StringBuilder sb = new StringBuilder("Added target attack of size ").

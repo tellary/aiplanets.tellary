@@ -112,8 +112,8 @@ public class MyBot {
     }
 
     private static SquareMatrix selectAction(PlanetWarsState state) {
-        List<List<SquareMatrix>> guessedPlans = guessGoodPlans(state);
-        return findBestPlan(state, guessedPlans).get(0);
+        List<Plan> guessedPlans = guessGoodPlans(state);
+        return findBestPlan(state, guessedPlans).transitions().iterator().next();
     }
 
     private static PlanetWarsState createState(PlanetWars pw) {
@@ -164,7 +164,7 @@ public class MyBot {
         return new PlanetWarsState(planetsInTime, ownersInTime, arrivalsInTime);
     }
 
-    private static List<SquareMatrix> findBestPlan(PlanetWarsState state, List<List<SquareMatrix>> plans) {
+    private static Plan findBestPlan(PlanetWarsState state, List<Plan> plans) {
         PlanSelection selection = new PlanSelection();
         selection.doPlanSelection(state, plans);
         return selection.getBestPlan();
@@ -172,15 +172,19 @@ public class MyBot {
 
 
 
-    public static int score(PlanetWarsState initialState, List<SquareMatrix> plan) {
-        List<List<SquareMatrix>> antiPlans = new LinkedList<List<SquareMatrix>>();
+    public static int score(PlanetWarsState initialState, Plan plan) {
+        if (Log.isEnabled()) {
+            Log.log("Going to process plan:");
+            Log.log(planToString(initialState, plan));
+        }
+        List<Plan> antiPlans = new LinkedList<Plan>();
         antiPlans.add(doNothingPlan(initialState));
         antiPlans.addAll(AttackTargetPlanetAntiPlans.attackTargetPlanetAntiPlans(initialState, plan));
         antiPlans.addAll(AttackSourcePlanetAntiPlans.attackSourcePlanetAntiPlans(initialState, plan));
 //        antiPlans.add(attackWeakestPlanetAntiPlan(initialState));
 
         int worseScore = Integer.MAX_VALUE;
-        for (List<SquareMatrix> antiPlan : antiPlans) {
+        for (Plan antiPlan : antiPlans) {
             PlanetWarsState state = initialState.copy();
             if (Log.isEnabled()) {
                 Log.log("Processing anti plan");
@@ -188,8 +192,8 @@ public class MyBot {
             }
 
 
-            state.setMyPlan(plan.iterator());
-            state.setEnemyPlan(antiPlan.iterator());
+            state.setMyPlan(plan.transitions().iterator());
+            state.setEnemyPlan(antiPlan.transitions().iterator());
             Result result;
             //noinspection StatementWithEmptyBody
             for (int i = 0; i < maxDistance; ++i) {
@@ -297,14 +301,16 @@ public class MyBot {
                 append(growth[i]).append(")");
     }
 
-    private static String planToString(PlanetWarsState state, List<SquareMatrix> plan) {
+    private static String planToString(PlanetWarsState state, Plan plan) {
         StringBuilder sb = new StringBuilder();
         int[] planets = state.getPlanetsInTime().get(0);
         int[] owners = state.getOwnersInTime().get(0);
-        for (int t = 0; t < plan.size(); ++t) {
+        Iterator<SquareMatrix> iter = plan.transitions().iterator();
+        for (int t = 0; iter.hasNext(); ++t) {
             sb.append("\n");
             sb.append("Print plan t: ").append(t).append(" - ");
-            SquareMatrix tr = plan.get(t);
+            SquareMatrix tr = iter.next();
+            int numTransitions = 0;
             for (int i = 0; i < tr.size(); ++i) {
                 for (int j = 0; j < tr.size(); ++j) {
                     if (tr.get(i, j) != 0) {
@@ -313,9 +319,12 @@ public class MyBot {
                         printPlanet(sb, planets, owners, j);
                         sb.append(", num ships: ").append(tr.get(i, j));
                         sb.append(", distance: ").append(distances[i][j]);
+                        sb.append("; ");
+                        ++numTransitions;
                     }
                 }
             }
+            sb.append("numTransitions: ").append(numTransitions);
         }
         return sb.toString();
     }
@@ -335,52 +344,46 @@ public class MyBot {
             if (owners[i] * sourceOwner == -1 && distances[i][targetPlanetId] < distances[sourcePlanetId][targetPlanetId]) {
                 aroundShips += owners[i] * planets[i];
             }
-
-            int leavers = 0;
-            for (int j = 0; j < planets.length; ++j) {
-                leavers += firstTurnTransitions.get(i, j);
-            }
-            aroundShips -= leavers;
         }
 
         return aroundShips;
     }
 
-    private static List<List<SquareMatrix>> guessGoodPlans(PlanetWarsState state) {
-        List<List<SquareMatrix>> plan = new LinkedList<List<SquareMatrix>>();
-        plan.add(doNothingPlan(state));
-        plan.addAll(kickOutPlans(state));
-        plan.addAll(takeOnePlanetPlans(state, 0));
+    private static List<Plan> guessGoodPlans(PlanetWarsState state) {
+        List<Plan> plans = new LinkedList<Plan>();
+        plans.add(doNothingPlan(state));
+        plans.addAll(kickOutPlans(state));
+        plans.addAll(takeOnePlanetPlans(state, 0));
         for (int i = 95; i >= 0; i-=15) {
-            plan.addAll(takeOnePlanetPlans(state, ((float) (100 - i)) / 100));
+            plans.addAll(takeOnePlanetPlans(state, ((float) (100 - i)) / 100));
         }
         for (int i = 95; i >= 0; i-=15) {
-            plan.addAll(onePlanetDefenseAnotherPlans(state, ((float) (100 - i)) / 100));
+            plans.addAll(onePlanetDefenseAnotherPlans(state, ((float) (100 - i)) / 100));
         }
 
-        plan.addAll(exchangeShipsPlan(state, 0.9));
-        plan.addAll(exchangeShipsPlan(state, 0.6));
-        plan.addAll(exchangeShipsPlan(state, 0.3));
-        plan.addAll(exchangeShipsPlan(state, 0.1));
-        plan.add(attackAllPlanetsPlan(state));
+        plans.addAll(exchangeShipsPlan(state, 0.9));
+        plans.addAll(exchangeShipsPlan(state, 0.6));
+        plans.addAll(exchangeShipsPlan(state, 0.3));
+        plans.addAll(exchangeShipsPlan(state, 0.1));
+        plans.add(attackAllPlanetsPlan(state));
 
-        return plan;
+        return plans;
     }
 
-    private static List<List<SquareMatrix>> exchangeShipsPlan(PlanetWarsState state, double factor) {
+    private static List<Plan> exchangeShipsPlan(PlanetWarsState state, double factor) {
         int[] planets = state.getPlanetsInTime().get(0);
         int[] owners = state.getOwnersInTime().get(0);
 
 
-        List<List<SquareMatrix>> plans = new LinkedList<List<SquareMatrix>>();
+        List<Plan> plans = new LinkedList<Plan>();
         for (int i = 0; i < planets.length; ++i) {
             if (owners[i] == 1) {
                 for (int j = 0; j < i; ++j) {
                     if (owners[j] == 1) {
                         SquareMatrix transitions = new SquareMatrix(planets.length);
                         transitions.set(i, j, (int)factor*planets[i]);
-                        List<SquareMatrix> transitionsInTime = new LinkedList<SquareMatrix>();
-                        transitionsInTime.add(transitions);
+                        Plan transitionsInTime = new Plan();
+                        transitionsInTime.addTransitions(transitions);
                         plans.add(transitionsInTime);
                     }
                 }
@@ -392,7 +395,7 @@ public class MyBot {
         return plans;
     }
 
-    private static List<SquareMatrix> attackAllPlanetsPlan(PlanetWarsState state) {
+    private static Plan attackAllPlanetsPlan(PlanetWarsState state) {
         int[] planets = state.getPlanetsInTime().get(0);
         int[] owners = state.getOwnersInTime().get(0);
 
@@ -418,19 +421,19 @@ public class MyBot {
                 }
             }
         }
-        List<SquareMatrix> transitionsInTime = new LinkedList<SquareMatrix>();
-        transitionsInTime.add(transitions);
+        Plan transitionsInTime = new Plan();
+        transitionsInTime.addTransitions(transitions);
 
         return transitionsInTime;
     }
 
-    private static List<SquareMatrix> doNothingPlan(PlanetWarsState state) {
+    private static Plan doNothingPlan(PlanetWarsState state) {
         int[] planets = state.getPlanetsInTime().get(0);
         SquareMatrix transitions = new SquareMatrix(planets.length);
-        List<SquareMatrix> transitionsInTime = new LinkedList<SquareMatrix>();
-        transitionsInTime.add(transitions);
+        Plan plan = new Plan();
+        plan.addTransitions(transitions);
 
-        return transitionsInTime;
+        return plan;
     }
 
     public static int requiredNumShips(PlanetWarsState state, int source, int target, boolean countGrowth) {
@@ -472,12 +475,12 @@ public class MyBot {
         return requiredNumShips;
     }
 
-    private static List<List<SquareMatrix>> kickOutPlans(PlanetWarsState state) {
+    private static List<Plan> kickOutPlans(PlanetWarsState state) {
         int[] planets = state.getPlanetsInTime().get(0);
         int[] owners = state.getOwnersInTime().get(0);
         List<int[]> arrivalsInTime = state.getArrivalsInTime();
 
-        List<List<SquareMatrix>> plans = new ArrayList<List<SquareMatrix>>();
+        List<Plan> plans = new LinkedList<Plan>();
 
         for (int t = 0; t < arrivalsInTime.size(); ++t) {
             int[] arrivals = arrivalsInTime.get(t);
@@ -485,18 +488,21 @@ public class MyBot {
                 if (arrivals[i] < 0 && owners[i] == 0 && arrivals[i] < planets[i]) {
                     List<Integer> sortedPlanetsRow = sortedPlanets.get(i);
                     for (int j : sortedPlanetsRow) {
+                        //if enemy is close then me than we won't try to kick him out.
+//                        if (owners[j] < 0)
+//                            break;
                         if (owners[j] > 0) {
                             int requiredNumShips = requiredNumShips(state, j, i, false);
                             //TODO: Explain why +2?
                             int timeToStart = t - distances[i][j] + 2;
                             int numShipsOnMyPlanet = planets[j] +  timeToStart * growth[j];
                             if (requiredNumShips > 0 && numShipsOnMyPlanet >= requiredNumShips) {
-                                List<SquareMatrix> plan = new ArrayList<SquareMatrix>();
+                                Plan plan = new Plan();
                                 plans.add(plan);
                                 SquareMatrix tr;
-                                plan.add(tr = new SquareMatrix(planets.length));
+                                plan.addTransitions(tr = new SquareMatrix(planets.length));
                                 for (int k = 0; k < timeToStart; ++k) {
-                                    plan.add(tr = new SquareMatrix(planets.length));
+                                    plan.addTransitions(tr = new SquareMatrix(planets.length));
                                 }
                                 //noinspection ConstantConditions
                                 tr.set(j, i, requiredNumShips);
@@ -510,11 +516,11 @@ public class MyBot {
         return plans;
     }
 
-    private static List<List<SquareMatrix>> takeOnePlanetPlans(PlanetWarsState state, float defenseFactor) {
+    private static List<Plan> takeOnePlanetPlans(PlanetWarsState state, float defenseFactor) {
         int[] planets = state.getPlanetsInTime().get(0);
         int[] owners = state.getOwnersInTime().get(0);
 
-        List<List<SquareMatrix>> plans = new ArrayList<List<SquareMatrix>>();
+        List<Plan> plans = new LinkedList<Plan>();
 
         for (int i = 0; i < planets.length; ++i) {
             if (owners[i] < 1) {
@@ -525,8 +531,8 @@ public class MyBot {
                         if (planets[j] * (1.0 - defenseFactor) > requiredNumShips && requiredNumShips > 0) {
                             SquareMatrix transitions = new SquareMatrix(planets.length);
                             transitions.set(j, i, requiredNumShips);
-                            List<SquareMatrix> transitionsInTime = new LinkedList<SquareMatrix>();
-                            transitionsInTime.add(transitions);
+                            Plan transitionsInTime = new Plan();
+                            transitionsInTime.addTransitions(transitions);
                             plans.add(transitionsInTime);
                         }
                     }
@@ -537,11 +543,11 @@ public class MyBot {
         return plans;
     }
 
-    private static List<List<SquareMatrix>> onePlanetDefenseAnotherPlans(PlanetWarsState state, double factor) {
+    private static List<Plan> onePlanetDefenseAnotherPlans(PlanetWarsState state, double factor) {
         int[] planets = state.getPlanetsInTime().get(0);
         int[] owners = state.getOwnersInTime().get(0);
 
-        List<List<SquareMatrix>> plans = new ArrayList<List<SquareMatrix>>();
+        List<Plan> plans = new LinkedList<Plan>();
 
         for (int t = 0; t < state.getArrivalsInTime().size(); ++t) {
             for (int i = 0; i < planets.length; ++i) {
@@ -551,8 +557,8 @@ public class MyBot {
                             if (i != j && owners[j] == 1) {
                                 SquareMatrix tr = new SquareMatrix(planets.length);
                                 tr.set(j, i, (int) (planets[j] * factor));
-                                List<SquareMatrix> transitionsInTime = new LinkedList<SquareMatrix>();
-                                transitionsInTime.add(tr);
+                                Plan transitionsInTime = new Plan();
+                                transitionsInTime.addTransitions(tr);
                                 plans.add(transitionsInTime);
                             }
                         }

@@ -11,16 +11,16 @@ import java.util.List;
  * Time: 12:30:09 AM
  */
 public class PlanSelectionWithSumAllScorerTest {
-    private List<List<SquareMatrix>> plans = null;
+    private List<Plan> plans = null;
 
     @Before
     public void setup() {
-        plans = new LinkedList<List<SquareMatrix>>();
+        plans = new LinkedList<Plan>();
         for (int i = 0; i < 50; ++i) {
             SquareMatrix tr = new SquareMatrix(2);
             tr.set(1, 0, i);
-            List<SquareMatrix> plan = new LinkedList<SquareMatrix>();
-            plan.add(tr);
+            Plan plan = new Plan();
+            plan.addTransitions(tr);
             plans.add(plan);
         }
     }
@@ -32,9 +32,9 @@ public class PlanSelectionWithSumAllScorerTest {
         MyBot.start = System.currentTimeMillis();
         selection.setScorer(new SumAllScorer());
 
-        selection.doPlanSelection(null, new LinkedList<List<SquareMatrix>>(plans));
+        selection.doPlanSelection(null, new LinkedList<Plan>(plans));
 
-        LinkedList<List<SquareMatrix>> plans = new LinkedList<List<SquareMatrix>>(this.plans);
+        LinkedList<Plan> plans = new LinkedList<Plan>(this.plans);
         selection = new PlanSelection();
         selection.setScorer(new SumAllScorer());
         long time = System.currentTimeMillis();
@@ -43,6 +43,6 @@ public class PlanSelectionWithSumAllScorerTest {
         time = System.currentTimeMillis() - time;
         System.out.println(time);
         
-        Assert.assertEquals(100, selection.getBestPlan().get(0).get(1, 0));
+        Assert.assertEquals(100, selection.getBestPlan().transitions().iterator().next().get(1, 0));
     }
 }

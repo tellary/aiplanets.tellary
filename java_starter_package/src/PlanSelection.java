@@ -11,11 +11,11 @@ public class PlanSelection {
     int idx = 0;
 
     private static class ScoredPlan {
-        List<SquareMatrix> plan;
+        Plan plan;
         int score;
         int idx;
 
-        private ScoredPlan(List<SquareMatrix> plan, int score, int idx) {
+        private ScoredPlan(Plan plan, int score, int idx) {
             this.plan = plan;
             this.score = score;
             this.idx = idx;
@@ -24,7 +24,7 @@ public class PlanSelection {
         @Override
         public boolean equals(Object o) {
             if (o instanceof ScoredPlan) {
-                List<SquareMatrix> plan = ((ScoredPlan)o).plan;
+                Plan plan = ((ScoredPlan)o).plan;
                 return plan == this.plan;
             }
             return false;
@@ -56,7 +56,7 @@ public class PlanSelection {
         this.topSize = topSize;
     }
 
-    public List<SquareMatrix> getBestPlan() {
+    public Plan getBestPlan() {
         return population.first().plan;
     }
 
@@ -68,8 +68,8 @@ public class PlanSelection {
         this.scorer = scorer;
     }
 
-    public void doPlanSelection(PlanetWarsState initialState, List<List<SquareMatrix>> planQueue) {
-        List<SquareMatrix> plan;
+    public void doPlanSelection(PlanetWarsState initialState, List<Plan> planQueue) {
+        Plan plan;
 
         while (!planQueue.isEmpty()) {
             if (shouldStop())
@@ -85,9 +85,10 @@ public class PlanSelection {
                     continue;
                 }
             }
-            if (entersTop(score)) {
+            if (!plan.isEmpty() && entersTop(score)) {
                 for (ScoredPlan planToMergeWith : population) {
-                    planQueue.add(sumPlans(plan, planToMergeWith.plan));
+                    if (!planToMergeWith.plan.isEmpty())
+                        planQueue.add(sumPlans(plan, planToMergeWith.plan));
                 }
             }
 
@@ -96,12 +97,12 @@ public class PlanSelection {
         }
     }
 
-    private static List<SquareMatrix> sumPlans(List<SquareMatrix> plan1, List<SquareMatrix> plan2) {
-        Iterator<SquareMatrix> plan1Iter = plan1.iterator();
-        Iterator<SquareMatrix> plan2Iter = plan2.iterator();
+    private static Plan sumPlans(Plan plan1, Plan plan2) {
+        Iterator<SquareMatrix> plan1Iter = plan1.transitions().iterator();
+        Iterator<SquareMatrix> plan2Iter = plan2.transitions().iterator();
 
         SquareMatrix tr, tr1, tr2;
-        List<SquareMatrix> sumPlan = new ArrayList<SquareMatrix>();
+        Plan sumPlan = new Plan();
         while (plan1Iter.hasNext() || plan2Iter.hasNext()) {
             if (plan1Iter.hasNext() && plan2Iter.hasNext()) {
                 tr1 = plan1Iter.next();
@@ -111,11 +112,11 @@ public class PlanSelection {
                 }
                 tr = new SquareMatrix(tr1.size());
                 tr.add(tr1).add(tr2);
-                sumPlan.add(tr);
+                sumPlan.addTransitions(tr);
             } else if (plan1Iter.hasNext()) {
-                sumPlan.add(plan1Iter.next());
+                sumPlan.addTransitions(plan1Iter.next());
             } else if (plan2Iter.hasNext()) {
-                sumPlan.add(plan2Iter.next());
+                sumPlan.addTransitions(plan2Iter.next());
             }
         }
         return sumPlan;

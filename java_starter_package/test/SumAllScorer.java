@@ -13,9 +13,9 @@ public class SumAllScorer implements Scorer {
     }
 
     @Override
-    public int score(PlanetWarsState state, List<SquareMatrix> plan) {
+    public int score(PlanetWarsState state, Plan plan) {
         int sum = 0;
-        for (SquareMatrix step : plan) {
+        for (SquareMatrix step : plan.transitions()) {
             for (int i = 0; i < step.size(); ++i) {
                 for (int j = 0; j < step.size(); ++j) {
                     sum += step.get(i, j);
