@@ -4,7 +4,7 @@ public class MyBot {
     public static final boolean SKIP_ON_ERROR = true;
 
     private static final long TIME_DIVIDER = 1;
-    private static final long TIMEOUT = 1000;
+    private static final long TIMEOUT = 700;
     @SuppressWarnings({"PointlessArithmeticExpression"})
     public static final long TIMESTOP = TIMEOUT/TIME_DIVIDER - 200;
 
