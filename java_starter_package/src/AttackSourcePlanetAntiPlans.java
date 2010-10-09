@@ -49,7 +49,7 @@ public class AttackSourcePlanetAntiPlans {
                             sb.append(requiredNumShips);
                             Log.log(sb.toString());
                         }
-                        requiredNumShips += MyBot.calculateAroundShips(state, k, i);
+                        requiredNumShips += MyBot.calculateAroundShips(state, k, i, firstTurn);
                         if (Log.isEnabled()) {
                             StringBuilder sb = new StringBuilder("With ships around: ");
                             sb.append(requiredNumShips);

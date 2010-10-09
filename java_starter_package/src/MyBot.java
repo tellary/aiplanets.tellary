@@ -320,10 +320,12 @@ public class MyBot {
         return sb.toString();
     }
 
-    public static int calculateAroundShips(PlanetWarsState state, int sourcePlanetId, int targetPlanetId) {
+    public static int calculateAroundShips(PlanetWarsState state, int sourcePlanetId, int targetPlanetId,
+                                           SquareMatrix firstTurnTransitions) {
         int[] planets = state.getPlanetsInTime().get(0);
         int[] owners = state.getOwnersInTime().get(0);
         int sourceOwner = owners[sourcePlanetId];
+
 
         int aroundShips = 0;
         for (int i = 0; i < planets.length; ++i) {
@@ -333,6 +335,12 @@ public class MyBot {
             if (owners[i] * sourceOwner == -1 && distances[i][targetPlanetId] < distances[sourcePlanetId][targetPlanetId]) {
                 aroundShips += owners[i] * planets[i];
             }
+
+            int leavers = 0;
+            for (int j = 0; j < planets.length; ++j) {
+                leavers += firstTurnTransitions.get(i, j);
+            }
+            aroundShips -= leavers;
         }
 
         return aroundShips;
