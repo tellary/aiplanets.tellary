@@ -3,7 +3,7 @@ import java.util.*;
 public class MyBot {
     public static final boolean SKIP_ON_ERROR = false;
 
-    private static final long TIME_DIVIDER = 2;
+    private static final long TIME_DIVIDER = 1;
     private static final long TIMEOUT = 1000;
     @SuppressWarnings({"PointlessArithmeticExpression"})
     public static final long TIMESTOP = TIMEOUT/TIME_DIVIDER - 200;
