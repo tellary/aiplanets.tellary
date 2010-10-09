@@ -1,7 +1,7 @@
 import java.util.*;
 
 public class MyBot {
-    public static final boolean SKIP_ON_ERROR = false;
+    public static final boolean SKIP_ON_ERROR = true;
 
     private static final long TIME_DIVIDER = 1;
     private static final long TIMEOUT = 1000;
