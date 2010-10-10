@@ -68,13 +68,15 @@ public class PlanSelection {
         this.scorer = scorer;
     }
 
-    public void doPlanSelection(PlanetWarsState initialState, List<Plan> planQueue) {
+    public void doPlanSelection(PlanetWarsState initialState, Collection<Plan> planQueue) {
         Plan plan;
 
         while (!planQueue.isEmpty()) {
             if (shouldStop())
                 return;
-            plan = planQueue.remove(0);
+            Iterator<Plan> iter = planQueue.iterator();
+            plan = iter.next();
+            iter.remove();
             int score = scorer.score(initialState, plan);
             if (score == Integer.MIN_VALUE)
                 continue;

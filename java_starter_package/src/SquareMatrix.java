@@ -64,4 +64,24 @@ public class SquareMatrix {
     public boolean isEmpty() {
         return data.isEmpty();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SquareMatrix that = (SquareMatrix) o;
+
+        //noinspection SimplifiableIfStatement
+        if (capacity != that.capacity) return false;
+
+        return data != null ? data.equals(that.data) : that.data == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = data != null ? data.hashCode() : 0;
+        result = 31 * result + capacity;
+        return result;
+    }
 }

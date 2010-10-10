@@ -25,4 +25,21 @@ public class Plan {
         SquareMatrix firstTurn = transitionsInTime.get(0);
         return firstTurn.isEmpty();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Plan plan = (Plan) o;
+
+        return transitionsInTime != null ? transitionsInTime.equals(plan.transitionsInTime) :
+                plan.transitionsInTime == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return transitionsInTime != null ? transitionsInTime.hashCode() : 0;
+    }
 }
