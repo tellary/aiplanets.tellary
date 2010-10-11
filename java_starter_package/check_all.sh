@@ -1,7 +1,7 @@
 javac src/*.java
 mv src/*.class .
 
-rm bot.log
+rm -f bot.log
 
 for map in maps/*
 do
@@ -12,7 +12,7 @@ do
 bot_name=`echo $bot | sed 's/example_bots\///'`
 echo $bot_name on $map_name
 java -jar tools/PlayGame.jar $map 500 200 log.txt "java MyBot" "java -jar $bot" 2> result_"$bot_name"_on_$map_name 1> check_game_"$bot_name"_on_$map_name
-cp bot.log bot_"$bot_name"_on_$map_name.log
+cp bot.log bot_"$bot_name"_on_$map_name.log > /dev/null 2>&1
 done
 done
 

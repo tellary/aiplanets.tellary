@@ -206,8 +206,8 @@ public class MyBot {
                     return Integer.MIN_VALUE;
             }
 
-//        int score = scoreNumShipsCoulomb(state);
-            int score = scoreNumShips(state);
+//            int score = scoreNumShips(state);
+            int score = (int) Math.pow(scoreNumShips(state), 3) + scoreNumEnemyCoulomb(state);
 //            int score = scoreNumPlanets(state);
             if (score < worseScore) {
                 if (Log.isEnabled()) {
@@ -224,6 +224,7 @@ public class MyBot {
         return worseScore;
     }
 
+
     private static int scoreNumShips(PlanetWarsState state) {
         int[] lastPlanets = state.getPlanetsInTime().get(state.getPlanetsInTime().size() - 1);
         int[] lastOwners = state.getOwnersInTime().get(state.getOwnersInTime().size() - 1);
@@ -236,24 +237,38 @@ public class MyBot {
         return sumShips;
     }
 
-    private static int scoreNumShipsCoulomb(PlanetWarsState state) {
+
+    private static int scoreNumEnemyCoulomb(PlanetWarsState state) {
         int[] planets = state.getPlanetsInTime().get(state.getPlanetsInTime().size() - 1);
         int[] owners = state.getOwnersInTime().get(state.getOwnersInTime().size() - 1);
         int score = 0;
         for (int i = 0; i < planets.length; ++i) {
-            for (int j = 0; j <= i; ++j) {
-                if (owners[i] == 1 && owners[j] == 1) {
-                    if (i != j) {
+            if (owners[i] == 1) {
+                for (int j = 0; j < planets.length; ++j) {
+                    if (owners[j] == -1) {
                         int d = distances[i][j];
-                        score += (int) ((double) planets[i]) * planets[j] / (d*d);
-                    } else {
-//                        score += planets[i] * planets[j];
+                        score += Math.sqrt(planets[i] * -planets[j]) / d;
                     }
                 }
             }
         }
         return score;
-//        return score;
+    }
+
+
+    private static int scoreNumShipsCoulomb(PlanetWarsState state) {
+        int[] planets = state.getPlanetsInTime().get(state.getPlanetsInTime().size() - 1);
+        int[] owners = state.getOwnersInTime().get(state.getOwnersInTime().size() - 1);
+        int score = 0;
+        for (int i = 0; i < planets.length; ++i) {
+            for (int j = 0; j < i; ++j) {
+                if (owners[i] == 1 && owners[j] == 1) {
+                    int d = distances[i][j];
+                    score += Math.sqrt(planets[i] * planets[j]) / d;
+                }
+            }
+        }
+        return score;
     }
 
     private static int scoreNumPlanets(PlanetWarsState state) {
