@@ -67,20 +67,25 @@ public class SquareMatrix {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null ||
+                getClass() != o.getClass()) 
+            return false;
 
         SquareMatrix that = (SquareMatrix) o;
 
         //noinspection SimplifiableIfStatement
         if (capacity != that.capacity) return false;
 
-        return data != null ? data.equals(that.data) : that.data == null;
+        //data is always not null
+        return data.equals(that.data);
     }
 
     @Override
     public int hashCode() {
-        int result = data != null ? data.hashCode() : 0;
+        //data is always not null
+        int result = data.hashCode();
         result = 31 * result + capacity;
         return result;
     }
