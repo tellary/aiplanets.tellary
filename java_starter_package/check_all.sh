@@ -1,5 +1,5 @@
-javac src/*.java
-mv src/*.class .
+javac src/main/java/*.java
+mv src/main/java/*.class .
 
 rm -f bot.log
 
