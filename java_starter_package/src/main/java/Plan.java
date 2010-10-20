@@ -34,17 +34,18 @@ public class Plan {
 
         Plan plan = (Plan) o;
 
-        return transitionsInTime != null ? transitionsInTime.equals(plan.transitionsInTime) :
-                plan.transitionsInTime == null;
-
+        //transitionsInTime is always not null
+        return transitionsInTime.equals(plan.transitionsInTime);
     }
 
     @Override
     public int hashCode() {
-        return transitionsInTime != null ? transitionsInTime.hashCode() : 0;
+        //transitionsInTime is always not null
+        return transitionsInTime.hashCode();
     }
 
     public static Plan sum(Plan plan1, Plan plan2) {
+        int size = -1;
         Iterator<SquareMatrix> plan1Iter = plan1.transitions().iterator();
         Iterator<SquareMatrix> plan2Iter = plan2.transitions().iterator();
 
@@ -60,10 +61,20 @@ public class Plan {
                 tr = new SquareMatrix(tr1.size());
                 tr.add(tr1).add(tr2);
                 sumPlan.addTransitions(tr);
+                size = tr1.size();
             } else if (plan1Iter.hasNext()) {
-                sumPlan.addTransitions(plan1Iter.next());
+                tr = plan1Iter.next();
+                if (tr.size() != size) {
+                    throw new RuntimeException("Fuck! Different transition matrix sizes!");
+                }
+                sumPlan.addTransitions(tr);
+
             } else if (plan2Iter.hasNext()) {
-                sumPlan.addTransitions(plan2Iter.next());
+                tr = plan2Iter.next();
+                if (tr.size() != size) {
+                    throw new RuntimeException("Fuck! Different transition matrix sizes!");
+                }
+                sumPlan.addTransitions(tr);
             }
         }
         return sumPlan;

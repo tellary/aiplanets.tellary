@@ -12,6 +12,15 @@ public class PlanSelection {
     private int topSize = 10;
     private int idx = 0;
 
+    private Timer timer = new DefaultTimer();
+
+    public PlanSelection() {
+    }
+
+    public PlanSelection(Timer timer) {
+        this.timer = timer;
+    }
+
     private static class ScoredPlan {
         Plan plan;
         int score;
@@ -31,7 +40,8 @@ public class PlanSelection {
                     if (o1.score > o2.score) {
                         return -1;
                     } else if (o1.score == o2.score) {
-                        return o1.idx < o2.idx ? -1 : o1.idx == o2.idx? 0 : 1;
+                        //o1.idx == o2.idx is never true
+                        return o1.idx < o2.idx ? -1 : 1;
                     } else {
                         return 1;
                     }
@@ -42,7 +52,18 @@ public class PlanSelection {
     private Scorer scorer = new StateEvaluationScorer();
 
     public Plan getBestPlan() {
+        if (population.isEmpty()) {
+            Plan plan = new Plan();
+            plan.addTransitions(new SquareMatrix(0));
+            return plan;
+        }
         return population.first().plan;
+    }
+
+    public int getBestScore() {
+        if (population.isEmpty())
+            return Integer.MIN_VALUE;
+        return population.first().score;
     }
 
     public void setScorer(Scorer scorer) {
@@ -53,7 +74,7 @@ public class PlanSelection {
         Plan plan;
 
         while (!planQueue.isEmpty()) {
-            if (shouldStop())
+            if (timer.shouldStop())
                 return;
             Iterator<Plan> iter = planQueue.iterator();
             plan = iter.next();
@@ -92,17 +113,5 @@ public class PlanSelection {
             }
         }
         return false;
-    }
-
-    private static boolean shouldStop() {
-        //noinspection SimplifiableIfStatement
-        if ("true".equals(System.getProperty("debug"))) {
-            return false;
-        }
-        boolean shouldExit = System.currentTimeMillis() - MyBot.start > MyBot.TIMESTOP;
-        if (shouldExit) {
-            Log.log(MyBot.turn, "Exiting by timeout");
-        }
-        return shouldExit;
     }
 }

@@ -62,7 +62,7 @@ public class SquareMatrix {
     }
 
     public boolean isEmpty() {
-        return data.isEmpty();
+        return data.isEmpty() || capacity == 0;
     }
 
     @Override
