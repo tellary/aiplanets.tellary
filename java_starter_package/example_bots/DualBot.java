@@ -27,7 +27,7 @@ public class DualBot {
 	Planet source = null;
 	double sourceScore = Double.MIN_VALUE;
 	for (Planet p : pw.myPlanets()) {
-	    double score = (double)p.getNumShips() / (1 + p.getGrowthRate());
+	    double score = (double)p.getNumShips() / (1 + p.getGrowth());
 	    if (score > sourceScore) {
 		sourceScore = score;
 		source = p;
@@ -41,7 +41,7 @@ public class DualBot {
 	    candidates = pw.EnemyPlanets();
 	}
 	for (Planet p : candidates) {
-	    double score = (double)(1 + p.getGrowthRate()) / p.getNumShips();
+	    double score = (double)(1 + p.getGrowth()) / p.getNumShips();
 	    if (score > destScore) {
 		destScore = score;
 		dest = p;

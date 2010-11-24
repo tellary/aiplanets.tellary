@@ -17,26 +17,26 @@ public class AttackTargetPlanetAntiPlans {
         SquareMatrix firstTurn = plan.transitions().iterator().next();
 
 
-        int[] planets = state.getPlanetsInTime().get(0);
-        int[] owners = state.getOwnersInTime().get(0);
+        int[] planets = state.getNumShipsOnTurn(0);
+        int[] owners = state.getOwnersOnTurn(0);
 
         for (int i = 0; i < firstTurn.size(); ++i) {
             for (int j = 0; j < firstTurn.size(); ++j) {
                 if (firstTurn.get(i, j) > 0) {
                     for (int k = 0; k < planets.length; ++k) {
-                        if (owners[k] == -1 && k != i && k != j) {
+                        if (owners[k] == PlanetWarsState.ENEMY && k != i && k != j) {
                             if (Log.isEnabled()) {
                                 StringBuilder sb = new StringBuilder();
                                 sb.append("Attack target: from ").append(k).append("(").append(planets[k]).append(") to ");
                                 sb.append(j).append("(").append(planets[j]).append(")");
-                                sb.append(", distance ").append(MyBot.distances[k][j]);
-                                sb.append(", victim growth ").append(MyBot.growth[j]).append(". ");
+                                sb.append(", distance ").append(StaticPlanetsData.distances[k][j]);
+                                sb.append(", victim growth ").append(StaticPlanetsData.growth[j]).append(". ");
                                 sb.append("For transition of size ").append(firstTurn.get(i, j)).
                                         append(" from ").append(i).append("(").append(planets[i]).append(") ").
                                         append(" to ").append(j).append("(").append(planets[j]).append(")");
                                 Log.log(sb.toString());
                             }
-                            int requiredNumShips = MyBot.requiredNumShipsForAttackAntiPlan(state, k, j);
+                            int requiredNumShips = MyBot.requiredNumShips(state, k, j, PlanetWarsState.ME);
                             if (Log.isEnabled()) {
                                 StringBuilder sb = new StringBuilder("Required num ships by growth and arrivals: ");
                                 sb.append(requiredNumShips);
@@ -48,17 +48,17 @@ public class AttackTargetPlanetAntiPlans {
                                 sb.append(requiredNumShips);
                                 Log.log(sb.toString());
                             }
-                            requiredNumShips += MyBot.calculateAroundShips(state, k, j, firstTurn);
+                            requiredNumShips += MyBot.calculateAroundShips(state, k, j, PlanetWarsState.ME);
                             if (Log.isEnabled()) {
                                 StringBuilder sb = new StringBuilder("With ships around: ");
                                 sb.append(requiredNumShips);
                                 Log.log(sb.toString());
                             }
-                            if (-planets[k] > requiredNumShips && requiredNumShips > 0) {
+                            if (planets[k] > requiredNumShips) {
                                 SquareMatrix antiTurn = new SquareMatrix(firstTurn.size());
                                 Plan antiPlan = new Plan();
                                 antiPlan.addTransitions(antiTurn);
-                                antiTurn.set(k, j, -requiredNumShips);
+                                antiTurn.set(k, j, requiredNumShips);
                                 if (Log.isEnabled()) {
                                     StringBuilder sb = new StringBuilder("Added target attack of size ").
                                             append(requiredNumShips);

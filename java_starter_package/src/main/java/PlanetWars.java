@@ -142,7 +142,7 @@ public class PlanetWars {
     //   * you can't move more ships than are currently on the source planet.
     //   * the ships will take a few turns to reach their destination. Travel
     //     is not instant. See the Distance() function for more info.
-    public void IssueOrder(int sourcePlanet,
+    public static void IssueOrder(int sourcePlanet,
                            int destinationPlanet,
                            int numShips) {
         System.out.println("" + sourcePlanet + " " + destinationPlanet + " " +
@@ -168,7 +168,7 @@ public class PlanetWars {
 
     // Sends the game engine a message to let it know that we're done sending
     // orders. This signifies the end of our turn.
-    public void FinishTurn() {
+    public static void FinishTurn() {
         System.out.println("go");
         System.out.flush();
     }

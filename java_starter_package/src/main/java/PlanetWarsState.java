@@ -8,69 +8,75 @@ import java.util.*;
 public class PlanetWarsState {
     public static final int ME = 1;
     public static final int ENEMY = 2;
-//    public static final int NEUTRAL = 0;
+    public static final int NEUTRAL = 0;
 
-    private List<int[]> planetsInTime;
-    private List<int[]> ownersInTime;
-    private List<int[]> arrivalsInTime;
+    private LinkedList<int[]> numShipsInTime;
+    private LinkedList<int[]> ownersInTime;
+    private Arrivals myArrivals;
+    private Arrivals enemyArrivals;
 
-    private Iterator<SquareMatrix> myPlan;
-    private Iterator<SquareMatrix> enemyPlan;
+    private Iterator<SquareMatrix> myPlan = Collections.<SquareMatrix>emptyList().iterator();
+    private Iterator<SquareMatrix> enemyPlan = Collections.<SquareMatrix>emptyList().iterator();
 
-    private int currentTurn;
+    private int currentTurn = 0;
 
     public PlanetWarsState(
-            List<int[]> planetsInTime,
-            List<int[]> ownersInTime,
-            List<int[]> arrivalsInTime) {
-        this.planetsInTime = planetsInTime;
-        this.ownersInTime = ownersInTime;
-        this.arrivalsInTime = arrivalsInTime;
+            int[] planets,
+            int[] owners,
+            Arrivals myArrivals,
+            Arrivals enemyArrivals) {
+
+        this.numShipsInTime = new LinkedList<int[]>();
+        this.numShipsInTime.add(planets);
+        this.ownersInTime = new LinkedList<int[]>();
+        this.ownersInTime.add(owners);
+        this.myArrivals = myArrivals;
+        this.enemyArrivals = enemyArrivals;
     }
 
-    public void setMyPlan(Iterator<SquareMatrix> myPlan) {
-        this.myPlan = myPlan;
+    public int getNumShips(int i) {
+        return numShipsInTime.peek()[i];
     }
 
-    public void setEnemyPlan(Iterator<SquareMatrix> enemyPlan) {
-        this.enemyPlan = enemyPlan;
+    public int getOwner(int i) {
+        return ownersInTime.peek()[i];
     }
 
-    public List<int[]> getPlanetsInTime() {
-        return planetsInTime;
+    public int[] getNumShipsOnTurn(int turn) {
+        return numShipsInTime.get(turn);
     }
 
-    public List<int[]> getOwnersInTime() {
-        return ownersInTime;
+    public int getNumPlanets() {
+        return numShipsInTime.peek().length;
     }
 
-    public List<int[]> getArrivalsInTime() {
-        return arrivalsInTime;
+    public int[] getOwnersOnTurn(int turn) {
+        return ownersInTime.get(turn);
     }
 
-    public PlanetWarsState copy() {
-        List<int[]> planetsInTime = new ArrayList<int[]>();
-        for (int[] planets : this.planetsInTime) {
-            int[] copy = new int[planets.length];
-            System.arraycopy(planets, 0, copy, 0, planets.length);
-            planetsInTime.add(copy);
-        }
+    public int getMaxArrivalsTurn() {
+        return Math.max(myArrivals.getMaxTurn(), enemyArrivals.getMaxTurn());
+    }
 
-        List<int[]> ownersInTime = new ArrayList<int[]>();
-        for (int[] owners : this.ownersInTime) {
-            int[] copy = new int[owners.length];
-            System.arraycopy(owners, 0, copy, 0, owners.length);
-            ownersInTime.add(copy);
-        }
+    public Arrivals getEnemyArrivals() {
+        return enemyArrivals;
+    }
 
-        List<int[]> arrivalsInTime = new ArrayList<int[]>();
-        for (int[] arrivals : this.arrivalsInTime) {
-            int[] copy = new int[arrivals.length];
-            System.arraycopy(arrivals, 0, copy, 0, arrivals.length);
-            arrivalsInTime.add(copy);
-        }
+    public PlanetWarsState setPlans(Iterator<SquareMatrix> myPlan, Iterator<SquareMatrix> enemyPlan) {
+        int[] planets = numShipsInTime.peek();
+        int[] planetsCopy = new int[planets.length];
+        System.arraycopy(planets, 0, planetsCopy, 0, planets.length);
+        int[] owners = ownersInTime.peek();
+        int[] ownersCopy = new int[owners.length];
+        System.arraycopy(owners, 0, ownersCopy, 0, planets.length);
 
-        return new PlanetWarsState(planetsInTime, ownersInTime, arrivalsInTime);
+        Arrivals myArrivals = this.myArrivals.copy();
+        Arrivals enemyArrivals = this.enemyArrivals.copy();
+
+        PlanetWarsState copy = new PlanetWarsState(planetsCopy, ownersCopy, myArrivals, enemyArrivals);
+        copy.myPlan = myPlan;
+        copy.enemyPlan = enemyPlan;
+        return copy;
     }
 
     private Result turn(Result result) {
@@ -78,17 +84,16 @@ public class PlanetWarsState {
         return result;
     }
 
+    public int getCurrentTurn() {
+        return currentTurn;
+    }
 
     public Result evaluateTurn() {
-        int[] prevPlanets = planetsInTime.get(currentTurn);
+        int[] prevPlanets = numShipsInTime.get(currentTurn);
         int[] prevOwners = ownersInTime.get(currentTurn);
 
         int planetsAmount = prevPlanets.length;
         int[] planets = new int[planetsAmount];
-        int[] arrivals = null;
-        if (currentTurn < arrivalsInTime.size()) {
-            arrivals = arrivalsInTime.get(currentTurn);
-        }
         int[] owners = new int[planetsAmount];
 
         SquareMatrix myTransitions = null;
@@ -101,54 +106,74 @@ public class PlanetWarsState {
         }
 
         for (int i = 0; i < planets.length; ++i) {
-            int arrivalsForPlanet = (arrivals == null? 0:arrivals[i]);
+            int myArrivalsForPlanet = myArrivals.get(currentTurn, i);
+            int enemyArrivalsForPlanet = enemyArrivals.get(currentTurn, i);
             if (Log.isEnabled()) {
                 StringBuilder sb = new StringBuilder("evaluateTurn arrivals: planet ");
                 MyBot.printPlanet(sb, prevPlanets, prevOwners, i);
-                sb.append(", turn: ").append(currentTurn).append(", arrivals: ").append(arrivalsForPlanet);
+                sb.append(", turn: ").append(currentTurn).
+                        append(", my arrivals: ").append(myArrivalsForPlanet).
+                        append(", enemy arrivals: ").append(enemyArrivalsForPlanet);
                 Log.log(sb.toString());
             }
-            
+
+
+            //My Departure phase handling
             if (applyTransitions(myTransitions, i, prevPlanets, prevOwners, planets) != Result.SUCCESS)
                 return turn(Result.FAILED);
+            //Enemy Departure phase handling
             if (applyTransitions(enemyTransitions, i, prevPlanets, prevOwners, planets) != Result.SUCCESS)
                 return turn(Result.FAILED);
 
-            if (!(arrivalsForPlanet < 0 && prevOwners[i] == 0)) {
-                planets[i] += arrivalsForPlanet + prevOwners[i] * MyBot.growth[i] + prevPlanets[i];
-                if (prevPlanets[i] < 0) {
-                    if (planets[i] > 0)
-                        owners[i] = 1;
-                    else
-                        owners[i] = prevOwners[i];
-                } else {
-                    if (planets[i] < 0)
-                        owners[i] = -1;
-                    else
-                        owners[i] = prevOwners[i];
-                }
+            //Planet Advancement (fleet advancement is handled by arrivals by turn indexing in Arrivals data structure
+            planets[i] += StaticPlanetsData.growth[i];
+
+            //Arrival phase handling
+            //TODO: write test fo forces handling
+            TreeSet<Force> forces = new TreeSet<Force>();
+            Force myForce = new Force(ME);
+            if (prevOwners[i] == ME) {
+                myForce.add(prevPlanets[i]);
+            }
+            myForce.add(myArrivalsForPlanet);
+            forces.add(myForce);
+
+            Force enemyForce = new Force(ENEMY);
+            if (prevOwners[i] == ENEMY) {
+                enemyForce.add(prevPlanets[i]);
+            }
+            enemyForce.add(enemyArrivalsForPlanet);
+            forces.add(enemyForce);
+
+            Force neutralForce = new Force(NEUTRAL);
+            if (prevOwners[i] == NEUTRAL) {
+                neutralForce.add(prevPlanets[i]);
+            }
+            forces.add(neutralForce);
+
+            
+            Iterator<Force> forceIterator = forces.iterator();
+            Force topForce = forceIterator.next();
+            Force secondForce = forceIterator.next();
+            if (topForce.getForce() == secondForce.getForce()) {
+                planets[i] = 0;
             } else {
-                planets[i] += arrivalsForPlanet + prevOwners[i] * MyBot.growth[i] - prevPlanets[i];
-                if (planets[i] > 0) {
-                    owners[i] = 0;
-                    planets[i] = -planets[i];
-                } else {
-                    owners[i] = -1;
-                }
+                planets[i] = topForce.getForce() - secondForce.getForce();
+                owners[i] = topForce.getOwner();
             }
 
-
-
+            
             if (Log.isEnabled()) {
-                StringBuilder sb = new StringBuilder("evaluateTurn planet: ");
+                StringBuilder sb = new StringBuilder("evaluateTurn complete planet: ");
                 MyBot.printPlanet(sb, planets, owners, i);
                 Log.log(sb.toString());
             }
         }
-        planetsInTime.add(planets);
+        numShipsInTime.add(planets);
         ownersInTime.add(owners);
 
-        if (!myPlan.hasNext() && !enemyPlan.hasNext() && arrivals == null)
+        if (!myPlan.hasNext() && !enemyPlan.hasNext() &&
+                myArrivals.allShipsArrived(currentTurn) && enemyArrivals.allShipsArrived(currentTurn))
             return turn(Result.FINISHED);
 
         return turn(Result.SUCCESS);
@@ -157,8 +182,7 @@ public class PlanetWarsState {
     private Result applyTransitions(SquareMatrix transitions, int i, int[] prevPlanets, int[] prevOwners, int[] planets) {
         if (transitions == null)
             return Result.SUCCESS;
-        int[] arrivals = null;
-        int[][] distances = MyBot.distances;
+        int[][] distances = StaticPlanetsData.distances;
         for (int j = 0; j < planets.length; ++j) {
             if (transitions.get(i,j) == 0)
                 continue;
@@ -173,30 +197,26 @@ public class PlanetWarsState {
                 Log.log(sb.toString());
             }
 
-            if (prevPlanets[i]*transitions.get(i, j) < 0)
-                return Result.FAILED;
-
             int distance = distances[i][j];
             if (distance == 0)
                 continue;
 
-            ListIterator<int[]> iter = arrivalsInTime.listIterator();
-            for (int a = 0; a < currentTurn + distance; ++a) {
-                if (iter.hasNext())
-                    arrivals = iter.next();
-                else {
-                    iter.add(arrivals = new int[transitions.size()]);
-                }
-            }
-            if (arrivals == null)
-                throw new RuntimeException();
-
-            arrivals[j] += transitions.get(i, j);
             planets[i] -= transitions.get(i, j);
-            if (prevPlanets[i] > 0 && prevPlanets[i] < -planets[i])
+            if (-planets[i] > prevPlanets[i])
                 return Result.FAILED;
-            if (prevPlanets[i] < 0 && -prevPlanets[i] < planets[i])
-                return Result.FAILED;
+            //Ship takes amount of turn equal to distance to get to destination,
+            //Arrivals data structure stores arrivals number by (turn - 1)
+            //That is why before arrival turn number is calculated to add to arrivals
+            int beforeArrivalTurn = currentTurn + distance - 1;
+            if (prevOwners[i] == ME) {
+                myArrivals.add(beforeArrivalTurn, j, transitions.get(i, j));
+            } else if (prevOwners[i] == ENEMY) {
+                enemyArrivals.add(beforeArrivalTurn, j, transitions.get(i, j));
+            } else if (prevOwners[i] == NEUTRAL) {
+                MyBot.fail("Attempt to apply transition from neutral planet");
+            } else {
+                MyBot.fail("Unknown owner code: " + prevOwners[i]);
+            }
         }
 
         return Result.SUCCESS;

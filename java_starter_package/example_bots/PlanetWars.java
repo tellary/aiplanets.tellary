@@ -222,7 +222,7 @@ public class PlanetWars {
 	int prod = 0;
 	for (Planet p : planets) {
 	    if (p.getOwner() == playerID) {
-		prod += p.getGrowthRate();
+		prod += p.getGrowth();
 	    }
 	}
 	return prod;
