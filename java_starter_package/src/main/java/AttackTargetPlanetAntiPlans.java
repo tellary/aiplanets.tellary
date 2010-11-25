@@ -54,7 +54,7 @@ public class AttackTargetPlanetAntiPlans {
                                 sb.append(requiredNumShips);
                                 Log.log(sb.toString());
                             }
-                            if (planets[k] > requiredNumShips) {
+                            if (planets[k] > requiredNumShips && requiredNumShips > 0) {
                                 SquareMatrix antiTurn = new SquareMatrix(firstTurn.size());
                                 Plan antiPlan = new Plan();
                                 antiPlan.addTransitions(antiTurn);

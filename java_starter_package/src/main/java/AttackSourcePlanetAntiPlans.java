@@ -22,10 +22,10 @@ public class AttackSourcePlanetAntiPlans {
 
         for (int i = 0; i < firstTurn.size(); ++i) {
             int leavers = 0;
+            if (owners[i] != PlanetWarsState.ME)
+                continue;
             for (int j = 0; j < firstTurn.size(); ++j) {
-                if (firstTurn.get(i, j) > 0) {
-                    leavers += firstTurn.get(i, j);
-                }
+                leavers += firstTurn.get(i, j);
             }
             if (leavers > 0) {
                 for (int k = 0; k < planets.length; ++k) {
@@ -52,13 +52,13 @@ public class AttackSourcePlanetAntiPlans {
                             sb.append(requiredNumShips);
                             Log.log(sb.toString());
                         }
-                        requiredNumShips += MyBot.calculateAroundShips(state, k, i, PlanetWarsState.ME);
-                        if (Log.isEnabled()) {
-                            StringBuilder sb = new StringBuilder("With ships around: ");
-                            sb.append(requiredNumShips);
-                            Log.log(sb.toString());
-                        }
-                        if (planets[k] >= requiredNumShips) {
+//                        requiredNumShips += MyBot.calculateAroundShips(state, k, i, PlanetWarsState.ME);
+//                        if (Log.isEnabled()) {
+//                            StringBuilder sb = new StringBuilder("With ships around: ");
+//                            sb.append(requiredNumShips);
+//                            Log.log(sb.toString());
+//                        }
+                        if (planets[k] >= requiredNumShips && requiredNumShips > 0) {
                             SquareMatrix antiTurn = new SquareMatrix(firstTurn.size());
                             Plan antiPlan = new Plan();
                             antiPlan.addTransitions(antiTurn);

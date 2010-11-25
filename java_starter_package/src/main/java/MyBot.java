@@ -94,7 +94,7 @@ public class MyBot {
         antiPlans.add(doNothingPlan(initialState));
         //TODO: Uncomment 2 anti-plans
 //        antiPlans.addAll(AttackTargetPlanetAntiPlans.attackTargetPlanetAntiPlans(initialState, plan));
-//        antiPlans.addAll(AttackSourcePlanetAntiPlans.attackSourcePlanetAntiPlans(initialState, plan));
+        antiPlans.addAll(AttackSourcePlanetAntiPlans.attackSourcePlanetAntiPlans(initialState, plan));
 //        antiPlans.add(attackWeakestPlanetAntiPlan(initialState));
 
         int worseScore = Integer.MAX_VALUE;
@@ -392,7 +392,7 @@ public class MyBot {
         int requiredNumShips = planets[target] + 1;
 
         if (owners[target] == targetOwner) {
-            return 0;
+            return -1;
         }
 
         return requiredNumShips + calculateAroundShips(state, source, target, targetOwner);
@@ -464,7 +464,7 @@ public class MyBot {
                     if (owners[j] == PlanetWarsState.ME) {
                         int requiredNumShips = requiredNumShips(state, j, i, PlanetWarsState.ENEMY);
                         int searchedNumShips = (int)(planets[j] * (1.0 - defenseFactor));
-                        if (searchedNumShips > requiredNumShips && requiredNumShips != 0) {
+                        if (searchedNumShips > requiredNumShips && requiredNumShips > 0) {
                             SquareMatrix transitions = new SquareMatrix(planets.length);
                             transitions.set(j, i, requiredNumShips);
                             Plan transitionsInTime = new Plan();
