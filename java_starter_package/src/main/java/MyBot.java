@@ -92,8 +92,9 @@ public class MyBot {
         }
         List<Plan> antiPlans = new LinkedList<Plan>();
         antiPlans.add(doNothingPlan(initialState));
-        antiPlans.addAll(AttackTargetPlanetAntiPlans.attackTargetPlanetAntiPlans(initialState, plan));
-        antiPlans.addAll(AttackSourcePlanetAntiPlans.attackSourcePlanetAntiPlans(initialState, plan));
+        //TODO: Uncomment 2 anti-plans
+//        antiPlans.addAll(AttackTargetPlanetAntiPlans.attackTargetPlanetAntiPlans(initialState, plan));
+//        antiPlans.addAll(AttackSourcePlanetAntiPlans.attackSourcePlanetAntiPlans(initialState, plan));
 //        antiPlans.add(attackWeakestPlanetAntiPlan(initialState));
 
         int worseScore = Integer.MAX_VALUE;
@@ -267,8 +268,13 @@ public class MyBot {
             enemyRadius = distance + 1;
         } else if (ownerOnArrival == PlanetWarsState.NEUTRAL) {
             int numShipsOnArrival = state.getNumShipsOnTurn(distance)[target];
-            int restoreTime = (int) Math.ceil((double)numShipsOnArrival / StaticPlanetsData.growth[target]);
-            enemyRadius = distance + restoreTime + 1;
+            if (StaticPlanetsData.growth[target] != 0) {
+                int restoreTime = (int) Math.ceil((double)numShipsOnArrival / StaticPlanetsData.growth[target]);
+                enemyRadius = distance + restoreTime + 1;
+            } else {
+                enemyRadius = StaticPlanetsData.maxDistance;
+            }
+
         } else {
             return 0;
         }

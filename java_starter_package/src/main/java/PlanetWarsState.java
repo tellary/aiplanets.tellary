@@ -88,6 +88,74 @@ public class PlanetWarsState {
         return currentTurn;
     }
 
+    static void printPlanet(StringBuilder sb, PlanetState state) {
+        sb.append(state.getPlanetId()).append("(").
+                append(state.getNumShips()).append("/").
+                append(state.getOwner()).append("/").
+                append(StaticPlanetsData.growth[state.getPlanetId()]).append(")");
+    }
+
+    static Result evaluateTurnForPlanet(PlanetState state) {
+        if (Log.isEnabled()) {
+            StringBuilder sb = new StringBuilder("evaluateTurn arrivals: planet ");
+            printPlanet(sb, state);
+            sb.append(", turn: ").append(state.getCurrentTurn()).
+                    append(", my arrivals: ").append(state.getMyArrivals()).
+                    append(", enemy arrivals: ").append(state.getEnemyArrivals());
+            Log.log(sb.toString());
+        }
+
+        //Departure phase handling
+        if (applyTransitions(state) != Result.SUCCESS)
+            return Result.FAILED;
+
+        //Planet Advancement (fleet advancement is handled by arrivals by turn indexing in Arrivals data structure
+        if (state.getOwner() != NEUTRAL)
+            state.addNumShips(state.getGrowth());
+
+        //Arrival phase handling
+        //TODO: write test fo forces handling
+        TreeSet<Force> forces = new TreeSet<Force>();
+        Force myForce = new Force(ME);
+        if (state.getOwner() == ME) {
+            myForce.add(state.getNumShips());
+        }
+        myForce.add(state.getMyArrivals());
+        forces.add(myForce);
+
+        Force enemyForce = new Force(ENEMY);
+        if (state.getOwner() == ENEMY) {
+            enemyForce.add(state.getNumShips());
+        }
+        enemyForce.add(state.getEnemyArrivals());
+        forces.add(enemyForce);
+
+        Force neutralForce = new Force(NEUTRAL);
+        if (state.getOwner() == NEUTRAL) {
+            neutralForce.add(state.getNumShips());
+        }
+        forces.add(neutralForce);
+
+
+        Iterator<Force> forceIterator = forces.iterator();
+        Force topForce = forceIterator.next();
+        Force secondForce = forceIterator.next();
+        if (topForce.getForce() == secondForce.getForce()) {
+            state.setNumShips(0);
+        } else {
+            state.setNumShips(topForce.getForce() - secondForce.getForce());
+            state.setOwner(topForce.getOwner());
+        }
+
+        if (Log.isEnabled()) {
+            StringBuilder sb = new StringBuilder("evaluateTurn complete planet: ");
+            printPlanet(sb, state);
+            Log.log(sb.toString());
+        }
+
+        return Result.SUCCESS;
+    }
+
     public Result evaluateTurn() {
         int[] prevPlanets = numShipsInTime.get(currentTurn);
         int[] prevOwners = ownersInTime.get(currentTurn);
@@ -108,66 +176,44 @@ public class PlanetWarsState {
         for (int i = 0; i < planets.length; ++i) {
             int myArrivalsForPlanet = myArrivals.get(currentTurn, i);
             int enemyArrivalsForPlanet = enemyArrivals.get(currentTurn, i);
-            if (Log.isEnabled()) {
-                StringBuilder sb = new StringBuilder("evaluateTurn arrivals: planet ");
-                MyBot.printPlanet(sb, prevPlanets, prevOwners, i);
-                sb.append(", turn: ").append(currentTurn).
-                        append(", my arrivals: ").append(myArrivalsForPlanet).
-                        append(", enemy arrivals: ").append(enemyArrivalsForPlanet);
-                Log.log(sb.toString());
-            }
 
-
-            //My Departure phase handling
-            if (applyTransitions(myTransitions, i, prevPlanets, prevOwners, planets) != Result.SUCCESS)
-                return turn(Result.FAILED);
-            //Enemy Departure phase handling
-            if (applyTransitions(enemyTransitions, i, prevPlanets, prevOwners, planets) != Result.SUCCESS)
-                return turn(Result.FAILED);
-
-            //Planet Advancement (fleet advancement is handled by arrivals by turn indexing in Arrivals data structure
-            planets[i] += StaticPlanetsData.growth[i];
-
-            //Arrival phase handling
-            //TODO: write test fo forces handling
-            TreeSet<Force> forces = new TreeSet<Force>();
-            Force myForce = new Force(ME);
+            Map<Integer, Integer> departures;
+            Arrivals arrivals = null;
             if (prevOwners[i] == ME) {
-                myForce.add(prevPlanets[i]);
-            }
-            myForce.add(myArrivalsForPlanet);
-            forces.add(myForce);
-
-            Force enemyForce = new Force(ENEMY);
-            if (prevOwners[i] == ENEMY) {
-                enemyForce.add(prevPlanets[i]);
-            }
-            enemyForce.add(enemyArrivalsForPlanet);
-            forces.add(enemyForce);
-
-            Force neutralForce = new Force(NEUTRAL);
-            if (prevOwners[i] == NEUTRAL) {
-                neutralForce.add(prevPlanets[i]);
-            }
-            forces.add(neutralForce);
-
-            
-            Iterator<Force> forceIterator = forces.iterator();
-            Force topForce = forceIterator.next();
-            Force secondForce = forceIterator.next();
-            if (topForce.getForce() == secondForce.getForce()) {
-                planets[i] = 0;
+                if (myTransitions != null)
+                    departures = myTransitions.getRow(i);
+                else
+                    departures = Collections.emptyMap();
+                arrivals = myArrivals;
+            } else if (prevOwners[i] == ENEMY) {
+                if (enemyTransitions != null)
+                    departures = enemyTransitions.getRow(i);
+                else
+                    departures = Collections.emptyMap();
+                arrivals = enemyArrivals;
             } else {
-                planets[i] = topForce.getForce() - secondForce.getForce();
-                owners[i] = topForce.getOwner();
+                if (myTransitions != null && !myTransitions.getRow(i).isEmpty())
+                    MyBot.fail("My transitions are not empty for neutral planet");
+                if (enemyTransitions != null && !enemyTransitions.getRow(i).isEmpty())
+                    MyBot.fail("Enemy transitions are not empty for neutral planet");
+                departures = Collections.emptyMap();
             }
-
-            
-            if (Log.isEnabled()) {
-                StringBuilder sb = new StringBuilder("evaluateTurn complete planet: ");
-                MyBot.printPlanet(sb, planets, owners, i);
-                Log.log(sb.toString());
+            PlanetState state =
+                    new PlanetState().
+                            setCurrentTurn(currentTurn).
+                            setPlanetId(i).
+                            setGrowth(StaticPlanetsData.growth[i]).
+                            setNumShips(prevPlanets[i]).
+                            setOwner(prevOwners[i]).
+                            setMyArrivals(myArrivalsForPlanet).
+                            setEnemyArrivals(enemyArrivalsForPlanet).
+                            setDepartures(departures).
+                            setArrivals(arrivals);
+            if (evaluateTurnForPlanet(state) == Result.FAILED) {
+                return turn(Result.FAILED);
             }
+            owners[i] = state.getOwner();
+            planets[i] = state.getNumShips();
         }
         numShipsInTime.add(planets);
         ownersInTime.add(owners);
@@ -179,44 +225,36 @@ public class PlanetWarsState {
         return turn(Result.SUCCESS);
     }
 
-    private Result applyTransitions(SquareMatrix transitions, int i, int[] prevPlanets, int[] prevOwners, int[] planets) {
-        if (transitions == null)
-            return Result.SUCCESS;
-        int[][] distances = StaticPlanetsData.distances;
-        for (int j = 0; j < planets.length; ++j) {
-            if (transitions.get(i,j) == 0)
+    private static Result applyTransitions(PlanetState state) {
+        int[][] distances = state.getDistances();
+
+        for (Map.Entry<Integer, Integer> departure : state.getDepartures().entrySet()) {
+            if (departure.getValue() == 0)
                 continue;
 
+            int targetPlanet = departure.getKey();
             if (Log.isEnabled()) {
                 StringBuilder sb = new StringBuilder("Going to apply transition from planet ");
-                MyBot.printPlanet(sb, prevPlanets, prevOwners, i);
+                printPlanet(sb, state);
                 sb.append(" to planet ");
-                MyBot.printPlanet(sb, prevPlanets, prevOwners, j);
-                sb.append(", num ships: ").append(transitions.get(i, j));
-                sb.append(", distance: ").append(distances[i][j]);
+                sb.append(targetPlanet);
+                sb.append(", num ships: ").append(departure.getValue());
+                sb.append(", distance: ").append(distances[state.getPlanetId()][departure.getKey()]);
                 Log.log(sb.toString());
             }
 
-            int distance = distances[i][j];
+            int distance = distances[state.getPlanetId()][targetPlanet];
             if (distance == 0)
                 continue;
 
-            planets[i] -= transitions.get(i, j);
-            if (-planets[i] > prevPlanets[i])
+            state.addNumShips(-departure.getValue());
+            if (state.getNumShips() < 0)
                 return Result.FAILED;
             //Ship takes amount of turn equal to distance to get to destination,
             //Arrivals data structure stores arrivals number by (turn - 1)
             //That is why before arrival turn number is calculated to add to arrivals
-            int beforeArrivalTurn = currentTurn + distance - 1;
-            if (prevOwners[i] == ME) {
-                myArrivals.add(beforeArrivalTurn, j, transitions.get(i, j));
-            } else if (prevOwners[i] == ENEMY) {
-                enemyArrivals.add(beforeArrivalTurn, j, transitions.get(i, j));
-            } else if (prevOwners[i] == NEUTRAL) {
-                MyBot.fail("Attempt to apply transition from neutral planet");
-            } else {
-                MyBot.fail("Unknown owner code: " + prevOwners[i]);
-            }
+            int beforeArrivalTurn = state.getCurrentTurn() + distance - 1;
+            state.getArrivals().add(beforeArrivalTurn, targetPlanet, departure.getValue());
         }
 
         return Result.SUCCESS;

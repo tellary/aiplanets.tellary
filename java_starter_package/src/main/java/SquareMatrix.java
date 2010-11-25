@@ -1,6 +1,5 @@
-import javax.swing.*;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -59,6 +58,14 @@ public class SquareMatrix {
             }
         }
         return this;
+    }
+
+    public Map<Integer, Integer> getRow(int i) {
+        Map<Integer, Integer> row = data.get(i);
+        if (row == null) {
+            return Collections.emptyMap();
+        }
+        return Collections.unmodifiableMap(row);
     }
 
     public boolean isEmpty() {
