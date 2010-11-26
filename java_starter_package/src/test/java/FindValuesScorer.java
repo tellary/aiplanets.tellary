@@ -14,7 +14,7 @@ public class FindValuesScorer implements Scorer {
     }
 
     @Override
-    public int score(PlanetWarsState state, Plan plan) {
+    public long score(PlanetWarsState state, Plan plan) {
         SquareMatrix step = plan.transitions().iterator().next();
         for (int value : values) {
             if (step.get(i, j) == value) {

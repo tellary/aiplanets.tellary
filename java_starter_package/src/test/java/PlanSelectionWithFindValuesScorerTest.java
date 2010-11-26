@@ -80,7 +80,7 @@ public class PlanSelectionWithFindValuesScorerTest {
         selection = new PlanSelection(timer);
         selection.setScorer(new Scorer() {
             @Override
-            public int score(PlanetWarsState state, Plan plan) {
+            public long score(PlanetWarsState state, Plan plan) {
                 return 10;
             }
         });
@@ -111,7 +111,7 @@ public class PlanSelectionWithFindValuesScorerTest {
         selection = new PlanSelection(timer);
         selection.setScorer(new Scorer() {
             @Override
-            public int score(PlanetWarsState state, Plan plan) {
+            public long score(PlanetWarsState state, Plan plan) {
                 return 10;
             }
         });
@@ -126,7 +126,7 @@ public class PlanSelectionWithFindValuesScorerTest {
         selection = new PlanSelection(timer);
         selection.setScorer(new Scorer() {
             @Override
-            public int score(PlanetWarsState state, Plan plan) {
+            public long score(PlanetWarsState state, Plan plan) {
                 return Integer.MIN_VALUE;
             }
         });

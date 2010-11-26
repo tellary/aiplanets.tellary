@@ -25,5 +25,16 @@ public class TestPlanetsParser {
         Assert.assertEquals(33, planets[0]);
         Assert.assertEquals(10, planets[1]);
         Assert.assertEquals(15, planets[2]);
+
+        int owners[] = state.getOwnersOnTurn(0);
+        Assert.assertEquals(3, owners.length);
+        Assert.assertEquals(PlanetWarsState.ME, owners[0]);
+        Assert.assertEquals(PlanetWarsState.ENEMY, owners[1]);
+        Assert.assertEquals(PlanetWarsState.NEUTRAL, owners[2]);
+
+        Arrivals enemyArrivals = state.getEnemyArrivals();
+        int distance = StaticPlanetsData.distances[1][2];
+        Assert.assertEquals(distance, enemyArrivals.getMaxTurn());
+        Assert.assertEquals(16, enemyArrivals.get(distance, 2));
     }
 }

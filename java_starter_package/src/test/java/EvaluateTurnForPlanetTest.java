@@ -80,6 +80,6 @@ public class EvaluateTurnForPlanetTest {
         PlanetWarsState.evaluateTurnForPlanet(state);
         Assert.assertEquals(PlanetWarsState.ME, state.getOwner());
         Assert.assertEquals(4, state.getNumShips());
-        Assert.assertEquals(2, arrivals.get(3, 2));
+        Assert.assertEquals(2, arrivals.get(4, 2));
     }
 }

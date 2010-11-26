@@ -23,10 +23,10 @@ public class PlanSelection {
 
     private static class ScoredPlan {
         Plan plan;
-        int score;
+        long score;
         int idx;
 
-        private ScoredPlan(Plan plan, int score, int idx) {
+        private ScoredPlan(Plan plan, long score, int idx) {
             this.plan = plan;
             this.score = score;
             this.idx = idx;
@@ -60,9 +60,9 @@ public class PlanSelection {
         return population.first().plan;
     }
 
-    public int getBestScore() {
+    public long getBestScore() {
         if (population.isEmpty())
-            return Integer.MIN_VALUE;
+            return Long.MIN_VALUE;
         return population.first().score;
     }
 
@@ -79,8 +79,8 @@ public class PlanSelection {
             Iterator<Plan> iter = planQueue.iterator();
             plan = iter.next();
             iter.remove();
-            int score = scorer.score(initialState, plan);
-            if (score == Integer.MIN_VALUE)
+            long score = scorer.score(initialState, plan);
+            if (score == Long.MIN_VALUE)
                 continue;
             if (population.size() == populationSize) {
                 if (score > population.last().score) {
@@ -101,13 +101,13 @@ public class PlanSelection {
         }
     }
 
-    private boolean entersTop(int score) {
+    private boolean entersTop(long score) {
         Iterator<ScoredPlan> topScoreIter = population.iterator();
         for (int i = 0; i < topSize; ++i) {
             if (!topScoreIter.hasNext()) {
                 return true;
             }
-            int topScore = topScoreIter.next().score;
+            long topScore = topScoreIter.next().score;
             if (score > topScore) {
                 return true;
             }

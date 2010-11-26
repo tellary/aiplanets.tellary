@@ -250,10 +250,7 @@ public class PlanetWarsState {
             state.addNumShips(-departure.getValue());
             if (state.getNumShips() < 0)
                 return Result.FAILED;
-            //Ship takes amount of turn equal to distance to get to destination,
-            //Arrivals data structure stores arrivals number by (turn - 1)
-            //That is why before arrival turn number is calculated to add to arrivals
-            int beforeArrivalTurn = state.getCurrentTurn() + distance - 1;
+            int beforeArrivalTurn = state.getCurrentTurn() + distance;
             state.getArrivals().add(beforeArrivalTurn, targetPlanet, departure.getValue());
         }
 

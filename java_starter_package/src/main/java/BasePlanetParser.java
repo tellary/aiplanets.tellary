@@ -59,9 +59,9 @@ public abstract class BasePlanetParser implements PlanetParser {
             int destination = Integer.parseInt(tokens[4]);
             int turnsRemaining = Integer.parseInt(tokens[6]);
             if (owner == PlanetWarsState.ME)
-                enemyArrivals.add(turnsRemaining, destination, numShips);
-            else if (owner == PlanetWarsState.ENEMY)
                 myArrivals.add(turnsRemaining, destination, numShips);
+            else if (owner == PlanetWarsState.ENEMY)
+                enemyArrivals.add(turnsRemaining, destination, numShips);
             else
                 throw new RuntimeException("owner should be 1 or 2");
 

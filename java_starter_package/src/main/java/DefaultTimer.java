@@ -6,7 +6,6 @@
 public class DefaultTimer implements Timer {
     @Override
     public boolean shouldStop() {
-        //noinspection SimplifiableIfStatement
         if ("true".equals(System.getProperty("debug"))) {
             return false;
         }

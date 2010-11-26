@@ -1,5 +1,3 @@
-import java.util.List;
-
 /**
  * Created by Silvestrov Ilya
  * Date: Oct 9, 2010
@@ -7,7 +5,7 @@ import java.util.List;
  */
 public class StateEvaluationScorer implements Scorer {
     @Override
-    public int score(PlanetWarsState state, Plan plan) {
+    public long score(PlanetWarsState state, Plan plan) {
         return MyBot.score(state, plan);
     }
 }

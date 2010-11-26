@@ -85,7 +85,7 @@ public class MyBot {
 
 
 
-    public static int score(PlanetWarsState initialState, Plan plan) {
+    public static long score(PlanetWarsState initialState, Plan plan) {
         if (Log.isEnabled()) {
             Log.log("Going to process plan:");
             Log.log(planToString(initialState, plan));
@@ -97,7 +97,7 @@ public class MyBot {
         antiPlans.addAll(AttackSourcePlanetAntiPlans.attackSourcePlanetAntiPlans(initialState, plan));
 //        antiPlans.add(attackWeakestPlanetAntiPlan(initialState));
 
-        int worseScore = Integer.MAX_VALUE;
+        long worseScore = Long.MAX_VALUE;
         for (Plan antiPlan : antiPlans) {
             PlanetWarsState state = initialState.setPlans(
                     plan.transitions().iterator(),
@@ -112,11 +112,11 @@ public class MyBot {
             for (int i = 0; i < StaticPlanetsData.maxDistance; ++i) {
                 result = state.evaluateTurn();
                 if (result == Result.FAILED)
-                    return Integer.MIN_VALUE;
+                    return Long.MIN_VALUE;
             }
 
-//            int score = scoreNumShips(state);
-            int score = (int) Math.pow(scoreNumShips(state), 3) + scoreNumEnemyCoulomb(state);
+            long score = scoreNumShips(state);
+//            long score = scoreNumShipsAndEnemyCoulomb(state);
 //            int score = scoreNumPlanets(state);
             if (score < worseScore) {
                 if (Log.isEnabled()) {
@@ -133,29 +133,50 @@ public class MyBot {
         return worseScore;
     }
 
+    static long scoreNumShipsAndEnemyCoulomb(PlanetWarsState state) {
+        int[] planets = state.getNumShipsOnTurn(state.getCurrentTurn());
+        int[] owners = state.getOwnersOnTurn(state.getCurrentTurn());
+        return scoreNumShipsAndEnemyCoulomb(planets, owners, StaticPlanetsData.distances);
+    }
+
+    static long scoreNumShipsAndEnemyCoulomb(int[] planets, int[] owners, int[][] distances) {
+        return (long) Math.pow(scoreNumShips(planets, owners), 3) + scoreNumEnemyCoulomb(planets, owners, distances);
+    }
 
     private static int scoreNumShips(PlanetWarsState state) {
         int[] lastPlanets = state.getNumShipsOnTurn(state.getCurrentTurn());
         int[] lastOwners = state.getOwnersOnTurn(state.getCurrentTurn());
+        return scoreNumShips(lastPlanets, lastOwners);
+    }
+
+    static int scoreNumShips(int[] lastPlanets, int[] lastOwners ) {
         int sumShips = 0;
         for (int i = 0; i < lastPlanets.length; ++i) {
-            if (lastOwners[i] != PlanetWarsState.NEUTRAL) {
+            if (lastOwners[i] == PlanetWarsState.ME) {
                 sumShips += lastPlanets[i];
+            } else if (lastOwners[i] == PlanetWarsState.ENEMY) {
+                sumShips -= lastPlanets[i];
             }
         }
         return sumShips;
     }
 
 
-    private static int scoreNumEnemyCoulomb(PlanetWarsState state) {
+    private static long scoreNumEnemyCoulomb(PlanetWarsState state) {
         int[] planets = state.getNumShipsOnTurn(state.getCurrentTurn());
         int[] owners = state.getOwnersOnTurn(state.getCurrentTurn());
-        int score = 0;
+        return scoreNumEnemyCoulomb(planets, owners, StaticPlanetsData.distances);
+    }
+
+    static long scoreNumEnemyCoulomb(int[] planets, int[] owners, int[][] distances) {
+        long score = 0;
         for (int i = 0; i < planets.length; ++i) {
             if (owners[i] == PlanetWarsState.ME) {
                 for (int j = 0; j < planets.length; ++j) {
                     if (owners[j] == PlanetWarsState.ENEMY) {
-                        int d = StaticPlanetsData.distances[i][j];
+                        int d = distances[i][j];
+                        if (d == 0)
+                            continue;
                         score += Math.sqrt(planets[i] * planets[j]) / d;
                     }
                 }
