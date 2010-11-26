@@ -34,7 +34,7 @@ public class PlanetsParserTest {
 
         Arrivals enemyArrivals = state.getEnemyArrivals();
         int distance = StaticPlanetsData.distances[1][2];
-        Assert.assertEquals(distance, enemyArrivals.getMaxTurn());
-        Assert.assertEquals(16, enemyArrivals.get(distance, 2));
+        Assert.assertEquals(distance - 1, enemyArrivals.getMaxTurn());
+        Assert.assertEquals(16, enemyArrivals.get(distance - 1, 2));
     }
 }

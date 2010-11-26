@@ -44,14 +44,14 @@ public class PlanSelectionWithFindValuesScorerTest {
     public void test() {
         //Warm up run
         PlanSelection selection;
-        selection = new PlanSelection(timer);
+        selection = new PlanSelection(1000, timer);
         selection.setScorer(new FindValuesScorer(20, 50, 70, 100));
         selection.doPlanSelection(null, new LinkedList<Plan>(plans));
 
         //Run to measure time and assure that max value is 100 as there exists
         //intermediate value greater or equal than 50
         LinkedList<Plan> plans = new LinkedList<Plan>(this.plans);
-        selection = new PlanSelection(timer);
+        selection = new PlanSelection(1000, timer);
         selection.setScorer(new FindValuesScorer(20, 50, 70, 100));
 
         long time = System.currentTimeMillis();
@@ -64,7 +64,7 @@ public class PlanSelectionWithFindValuesScorerTest {
 
         //This run should have max value 20 as 20 < 50
         plans = new LinkedList<Plan>(this.plans);
-        selection = new PlanSelection();
+        selection = new PlanSelection(1000);
         selection.setScorer(new FindValuesScorer(20, 100));
         time = System.currentTimeMillis();
         MyBot.start = time;
@@ -77,7 +77,7 @@ public class PlanSelectionWithFindValuesScorerTest {
     @Test
     public void testSameScoredPlansAreOrdered() {
         PlanSelection selection;
-        selection = new PlanSelection(timer);
+        selection = new PlanSelection(1000, timer);
         selection.setScorer(new Scorer() {
             @Override
             public long score(PlanetWarsState state, Plan plan) {
@@ -94,7 +94,7 @@ public class PlanSelectionWithFindValuesScorerTest {
     @Test
     public void testTimeout() {
         PlanSelection selection;
-        selection = new PlanSelection(new Timer() {
+        selection = new PlanSelection(1000, new Timer() {
             @Override
             public boolean shouldStop() {
                 return true;
@@ -108,7 +108,7 @@ public class PlanSelectionWithFindValuesScorerTest {
     @Test
     public void testEmptyQueue() {
         PlanSelection selection;
-        selection = new PlanSelection(timer);
+        selection = new PlanSelection(1000, timer);
         selection.setScorer(new Scorer() {
             @Override
             public long score(PlanetWarsState state, Plan plan) {
@@ -123,7 +123,7 @@ public class PlanSelectionWithFindValuesScorerTest {
     @Test
     public void testAllPlansBad() {
         PlanSelection selection;
-        selection = new PlanSelection(timer);
+        selection = new PlanSelection(1000, timer);
         selection.setScorer(new Scorer() {
             @Override
             public long score(PlanetWarsState state, Plan plan) {

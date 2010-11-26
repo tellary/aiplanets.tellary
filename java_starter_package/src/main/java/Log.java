@@ -12,10 +12,7 @@ public class Log {
     private static final boolean enabled;
 
     static {
-        boolean log = Boolean.valueOf(System.getProperty("log", "false"));
-        if (!log)
-            log = Boolean.valueOf(System.getProperty("debug", "false"));
-        enabled = log;
+        enabled = Boolean.valueOf(System.getProperty("log", "false"));
     }
 
     private static Writer writer;
@@ -24,7 +21,7 @@ public class Log {
     private static Writer writer() {
         if (writer == null) {
             try {
-                writer = new FileWriter("bot.log");
+                writer = new FileWriter("/home/ilya/bot.log");
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

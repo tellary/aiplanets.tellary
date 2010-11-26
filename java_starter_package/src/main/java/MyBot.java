@@ -78,7 +78,7 @@ public class MyBot {
     }
 
     private static Plan findBestPlan(PlanetWarsState state, Collection<Plan> plans) {
-        PlanSelection selection = new PlanSelection();
+        PlanSelection selection = new PlanSelection(Integer.MAX_VALUE);
         selection.doPlanSelection(state, plans);
         return selection.getBestPlan();
     }
@@ -116,7 +116,7 @@ public class MyBot {
             }
 
 //            long score = scoreNumShips(state);
-            long score = scoreNumShipsAndEnemyCoulomb(state);
+            long score = scoreNumShipsAndEnemyCoulomb(state) + scoreTakeOverLoss(state);
 //            int score = scoreNumPlanets(state);
             if (score < worseScore) {
                 if (Log.isEnabled()) {
@@ -131,6 +131,25 @@ public class MyBot {
             }
         }
         return worseScore;
+    }
+
+    static long scoreTakeOverLoss(PlanetWarsState state) {
+        int score = 0;
+        int scoreStep = 100000; 
+        int[] initialOwners = state.getOwnersOnTurn(0);
+        int[] finalOwners = state.getOwnersOnTurn(0);
+        for (int i = 0; i < initialOwners.length; ++i) {
+            if (finalOwners[i] == PlanetWarsState.ME) {
+                if (initialOwners[i] == PlanetWarsState.NEUTRAL)
+                    score += scoreStep/2;
+                else if (initialOwners[i] == PlanetWarsState.NEUTRAL) {
+                    score += scoreStep; 
+                }
+            } else if (initialOwners[i] == PlanetWarsState.ME) {
+                score -= scoreStep;
+            }
+        }
+        return score;
     }
 
     static long scoreNumShipsAndEnemyCoulomb(PlanetWarsState state) {

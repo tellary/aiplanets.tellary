@@ -61,6 +61,11 @@ public class EvaluateTurnForPlanetTest {
         Map<Integer, Integer> departures = new HashMap<Integer, Integer>();
         departures.put(2, 2);
         Arrivals arrivals = new Arrivals(3);
+        int[][] distances = new int[][] {
+                new int[] {0 , 5, 10},
+                new int[] {5 , 0, 4 },
+                new int[] {10, 4, 0 },
+        };
         PlanetState state = new PlanetState().
                 setPlanetId(1).
                 setMyArrivals(4).
@@ -70,16 +75,10 @@ public class EvaluateTurnForPlanetTest {
                 setOwner(PlanetWarsState.ME).
                 setDepartures(departures).
                 setArrivals(arrivals).
-                setDistances(
-                        new int[][] {
-                                new int[] {0 , 5, 10},
-                                new int[] {5 , 0, 4 },
-                                new int[] {10, 4, 0 },
-                        }
-                );
+                setDistances(distances);
         PlanetWarsState.evaluateTurnForPlanet(state);
         Assert.assertEquals(PlanetWarsState.ME, state.getOwner());
         Assert.assertEquals(4, state.getNumShips());
-        Assert.assertEquals(2, arrivals.get(4, 2));
+        Assert.assertEquals(2, arrivals.get(distances[1][2] - 1, 2));
     }
 }

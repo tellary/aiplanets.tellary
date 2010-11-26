@@ -11,13 +11,16 @@ public class PlanSelection {
     @SuppressWarnings({"FieldCanBeLocal"})
     private int topSize = 10;
     private int idx = 0;
+    private int maxIdx;
 
     private Timer timer = new DefaultTimer();
 
-    public PlanSelection() {
+    public PlanSelection(int maxIdx) {
+        this.maxIdx = maxIdx;
     }
 
-    public PlanSelection(Timer timer) {
+    public PlanSelection(int maxIdx, Timer timer) {
+        this.maxIdx = maxIdx;
         this.timer = timer;
     }
 
@@ -73,7 +76,7 @@ public class PlanSelection {
     public void doPlanSelection(PlanetWarsState initialState, Collection<Plan> planQueue) {
         Plan plan;
 
-        while (!planQueue.isEmpty()) {
+        while (!planQueue.isEmpty() && idx < maxIdx) {
             if (timer.shouldStop())
                 return;
             Iterator<Plan> iter = planQueue.iterator();
