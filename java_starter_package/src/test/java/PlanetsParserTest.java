@@ -8,9 +8,9 @@ import java.io.*;
  * Date: Nov 25, 2010
  * Time: 2:28:46 AM
  */
-public class TestPlanetsParser {
+public class PlanetsParserTest {
     public static PlanetWarsState parseMap(String name) throws IOException {
-        InputStream is = TestPlanetsParser.class.getResourceAsStream(name);
+        InputStream is = PlanetsParserTest.class.getResourceAsStream(name);
         InputStreamReader fr = new InputStreamReader(is);
         BufferedReader br = new BufferedReader(fr);
         PlanetParser planetParser = new FirstTurnPlanetParser();

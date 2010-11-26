@@ -55,9 +55,7 @@ public class FirstTurnPlanetParser extends BasePlanetParser {
         for (int i = 0; i < planetsAmount; ++i) {
             ArrayList<Integer> sortedPlanetsRow = new ArrayList<Integer>(planetsAmount - 1);
             for (int j = 0 ; j < planetsAmount; ++j) {
-                double dx = x.get(i) - x.get(j);
-                double dy = y.get(i) - y.get(j);
-                StaticPlanetsData.distances[i][j] = (int)Math.ceil(Math.sqrt(dx * dx + dy * dy));
+                StaticPlanetsData.distances[i][j] = distance(x.get(i), y.get(i), x.get(j), y.get(j));
 
                 if (i != j) {
                     StaticPlanetsData.avgDistance += StaticPlanetsData.distances[i][j];
@@ -87,5 +85,15 @@ public class FirstTurnPlanetParser extends BasePlanetParser {
             result[i] = list.get(i);
         }
         return result;
+    }
+
+    public static int distance(double x1, double y1, double x2, double y2) {
+        double dx = x1 - x2;
+        double dy = y1 - y2;
+        return (int)Math.ceil(Math.sqrt(dx * dx + dy * dy));
+    }
+
+    public static void main(String[] args) {
+        System.out.println(distance(11.6182846843, 2.80206385833, 11.60660153, 16.8718782728));
     }
 }

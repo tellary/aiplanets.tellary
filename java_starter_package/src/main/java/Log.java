@@ -24,7 +24,7 @@ public class Log {
     private static Writer writer() {
         if (writer == null) {
             try {
-                writer = new FileWriter("/home/ilya/bot.log");
+                writer = new FileWriter("bot.log");
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

@@ -250,7 +250,7 @@ public class PlanetWarsState {
             state.addNumShips(-departure.getValue());
             if (state.getNumShips() < 0)
                 return Result.FAILED;
-            int beforeArrivalTurn = state.getCurrentTurn() + distance;
+            int beforeArrivalTurn = state.getCurrentTurn() + distance - 1;
             state.getArrivals().add(beforeArrivalTurn, targetPlanet, departure.getValue());
         }
 

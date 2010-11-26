@@ -94,7 +94,7 @@ public class MyBot {
         antiPlans.add(doNothingPlan(initialState));
         //TODO: Uncomment 2 anti-plans
 //        antiPlans.addAll(AttackTargetPlanetAntiPlans.attackTargetPlanetAntiPlans(initialState, plan));
-        antiPlans.addAll(AttackSourcePlanetAntiPlans.attackSourcePlanetAntiPlans(initialState, plan));
+//        antiPlans.addAll(AttackSourcePlanetAntiPlans.attackSourcePlanetAntiPlans(initialState, plan));
 //        antiPlans.add(attackWeakestPlanetAntiPlan(initialState));
 
         long worseScore = Long.MAX_VALUE;
@@ -115,8 +115,8 @@ public class MyBot {
                     return Long.MIN_VALUE;
             }
 
-            long score = scoreNumShips(state);
-//            long score = scoreNumShipsAndEnemyCoulomb(state);
+//            long score = scoreNumShips(state);
+            long score = scoreNumShipsAndEnemyCoulomb(state);
 //            int score = scoreNumPlanets(state);
             if (score < worseScore) {
                 if (Log.isEnabled()) {

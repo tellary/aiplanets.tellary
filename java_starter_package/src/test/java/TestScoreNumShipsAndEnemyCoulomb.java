@@ -21,6 +21,10 @@ public class TestScoreNumShipsAndEnemyCoulomb {
                 1, 2, 2
         };
 
+        Assert.assertEquals(-110, MyBot.scoreNumShips(planets, owners));
+        Assert.assertEquals(
+                (long)Math.sqrt(200*110)/3 + (long)Math.sqrt(200*200)/7, 
+                MyBot.scoreNumEnemyCoulomb(planets, owners, distances));
         long scoreStay = MyBot.scoreNumShipsAndEnemyCoulomb(planets, owners, distances);
         planets = new int [] {
                 165, 125, 225
