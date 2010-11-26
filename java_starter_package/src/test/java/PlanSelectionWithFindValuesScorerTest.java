@@ -127,7 +127,7 @@ public class PlanSelectionWithFindValuesScorerTest {
         selection.setScorer(new Scorer() {
             @Override
             public long score(PlanetWarsState state, Plan plan) {
-                return Integer.MIN_VALUE;
+                return Long.MIN_VALUE;
             }
         });
 
@@ -141,6 +141,6 @@ public class PlanSelectionWithFindValuesScorerTest {
         iter.next();
         Assert.assertFalse(iter.hasNext());
 
-        Assert.assertEquals(Integer.MIN_VALUE, selection.getBestScore());
+        Assert.assertEquals(Long.MIN_VALUE, selection.getBestScore());
     }
 }
