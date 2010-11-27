@@ -7,9 +7,9 @@ public class MyBot {
     public static final boolean SKIP_ON_ERROR = false;
 
     private static final long TIME_DIVIDER = 1;
-    private static final long TIMEOUT = 700;
+    private static final long TIMEOUT = 500;
     @SuppressWarnings({"PointlessArithmeticExpression"})
-    public static final long TIMESTOP = TIMEOUT/TIME_DIVIDER - 400;
+    public static final long TIMESTOP = TIMEOUT/TIME_DIVIDER - 200;
 
     public static int turn = 0;
     public static long start;
@@ -81,6 +81,18 @@ public class MyBot {
         PlanSelection selection = new PlanSelection(Integer.MAX_VALUE);
         selection.doPlanSelection(state, plans);
         return selection.getBestPlan();
+
+//        Plan bestPlan = plans.iterator().next();
+//        long bestScore = Long.MIN_VALUE;
+//
+//        for (Plan plan : plans) {
+//            long score = score(state, plan);
+//            if (score > bestScore) {
+//                bestScore = score;
+//                bestPlan = plan;
+//            }
+//        }
+//        return bestPlan;
     }
 
 
@@ -116,7 +128,8 @@ public class MyBot {
             }
 
 //            long score = scoreWin(state, scoreNumShips(state));
-            long score = scoreWin(state, scoreNumShipsAndEnemyCoulomb(state));
+//            long score = scoreWin(state, scoreNumShipsAndEnemyCoulomb(state));
+            long score = scoreNumShipsAndEnemyCoulomb(state);
 //            long score = scoreComplex(state);
 //            int score = scoreNumPlanets(state);
             if (score < worseScore) {
@@ -177,14 +190,14 @@ public class MyBot {
         return (long) Math.pow(scoreNumShips(planets, owners), 3) + scoreNumEnemyCoulomb(planets, owners, distances);
     }
 
-    private static int scoreNumShips(PlanetWarsState state) {
+    public static long scoreNumShips(PlanetWarsState state) {
         int[] lastPlanets = state.getNumShipsOnTurn(state.getCurrentTurn());
         int[] lastOwners = state.getOwnersOnTurn(state.getCurrentTurn());
         return scoreNumShips(lastPlanets, lastOwners);
     }
 
-    static int scoreNumShips(int[] lastPlanets, int[] lastOwners ) {
-        int sumShips = 0;
+    static long scoreNumShips(int[] lastPlanets, int[] lastOwners ) {
+        long sumShips = 0;
         for (int i = 0; i < lastPlanets.length; ++i) {
             if (lastOwners[i] == PlanetWarsState.ME) {
                 sumShips += lastPlanets[i];
@@ -322,11 +335,7 @@ public class MyBot {
         }
 
         int ownerOnArrival = state.getOwnersOnTurn(distance)[target];
-        if (ownerOnArrival != targetOwner) {
-            //I want to keep this planet at least for one turn, this is why
-            //I need to with stand all arrivals from distance + 1 radius
-            enemyRadius = distance + 1;
-        } else if (ownerOnArrival == PlanetWarsState.NEUTRAL) {
+        if (ownerOnArrival == PlanetWarsState.NEUTRAL) {
             int numShipsOnArrival = state.getNumShipsOnTurn(distance)[target];
             if (StaticPlanetsData.growth[target] != 0) {
                 int restoreTime = (int) Math.ceil((double)numShipsOnArrival / StaticPlanetsData.growth[target]);
@@ -334,6 +343,10 @@ public class MyBot {
             } else {
                 enemyRadius = StaticPlanetsData.maxDistance;
             }
+        } else if (ownerOnArrival != targetOwner) {
+            //I want to keep this planet at least for one turn, this is why
+            //I need to with stand all arrivals from distance + 1 radius
+            enemyRadius = distance + 1;
         } else {
             return 0;
         }
@@ -345,22 +358,41 @@ public class MyBot {
         int aroundShips = 0;
         //Calculate around planet's enemy ship which could be sent onto target planet take it
         List<Integer> sortedRow = StaticPlanetsData.sortedPlanets.get(target);
+        int lastStartTime = -1;
+        int targetShipsThisTime = 0;
+        int nonTargetShipsThisTime = 0;
         for (int i = sortedRow.size() - 1; i > -1; --i) {
+            int possibleArrivalPlanet = sortedRow.get(i);
             //Start time for a planet is chosen to be as late as possible to accumulate more ships. 
-            int startTime = enemyRadius - StaticPlanetsData.distances[i][target];
-            if (i != target && startTime >= 0) {
-                if (state.getOwnersOnTurn(startTime)[i] != PlanetWarsState.NEUTRAL) {
-                    if (state.getOwnersOnTurn(startTime)[i] != targetOwner) {
-                        aroundShips += state.getNumShipsOnTurn(startTime)[i];
+            int startTime = enemyRadius - StaticPlanetsData.distances[possibleArrivalPlanet][target];
+            if (lastStartTime < 0) {
+                lastStartTime = startTime;
+            }
+            if (startTime != lastStartTime) {
+                aroundShips -= targetShipsThisTime;
+                if (aroundShips < 0) {
+                    aroundShips = 0;
+                }
+                aroundShips += nonTargetShipsThisTime;
+                nonTargetShipsThisTime = 0;
+                targetShipsThisTime = 0;
+                lastStartTime = startTime;
+            }
+            if (possibleArrivalPlanet != target && startTime >= 0) {
+                if (state.getOwnersOnTurn(startTime)[possibleArrivalPlanet] != PlanetWarsState.NEUTRAL) {
+                    if (state.getOwnersOnTurn(startTime)[possibleArrivalPlanet] != targetOwner) {
+                        nonTargetShipsThisTime += state.getNumShipsOnTurn(startTime)[possibleArrivalPlanet];
                     } else {
-                        aroundShips -= state.getNumShipsOnTurn(startTime)[i];
-                    }
-                    if (aroundShips < 0) {
-                        aroundShips = 0;
+                        targetShipsThisTime += state.getNumShipsOnTurn(startTime)[possibleArrivalPlanet];
                     }
                 }
             }
         }
+        aroundShips -= targetShipsThisTime;
+        if (aroundShips < 0) {
+            aroundShips = 0;
+        }
+        aroundShips += nonTargetShipsThisTime;
 
         return aroundShips;
     }
@@ -382,7 +414,7 @@ public class MyBot {
         addExchangeShipsPlans(state, 0.6, plans);
         addExchangeShipsPlans(state, 0.3, plans);
         addExchangeShipsPlans(state, 0.1, plans);
-        addAttackAllPlanetsPlan(state, plans);
+//        addAttackAllPlanetsPlan(state, plans);
 
         return plans;
     }
@@ -482,7 +514,7 @@ public class MyBot {
                     for (int j : sortedPlanetsRow) {
                         int timeToStart = t - StaticPlanetsData.distances[j][i];
 
-                        if (state.getOwnersOnTurn(0)[j] != PlanetWarsState.ME) {
+                        if (timeToStart < 0 || state.getOwnersOnTurn(timeToStart)[j] != PlanetWarsState.ME) {
                             continue;
                         }
 

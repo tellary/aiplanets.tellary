@@ -1,0 +1,15 @@
+# This map tests the condition, when you should take over a planet right after your opponent did.
+# So, there are 2 planets equally distant from the neutral one. And your opponent had sent a fleet to the planet.
+# You and your enemy
+P 10 0 1 33 2
+P 20 0 2 10 1
+
+#Neutral planets
+P 18 0 0 15 5
+
+#Neutral just to make it look fine
+#P 10 10 0 0 0
+
+# Fleets
+F 2 16 1 2 2 2
+go

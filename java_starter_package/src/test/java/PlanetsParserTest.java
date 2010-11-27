@@ -13,8 +13,15 @@ public class PlanetsParserTest {
         InputStream is = PlanetsParserTest.class.getResourceAsStream(name);
         InputStreamReader fr = new InputStreamReader(is);
         BufferedReader br = new BufferedReader(fr);
+        String line;
+        StringBuilder map = new StringBuilder();
+        while ((line = br.readLine()) != null) {
+            map.append(line);
+            map.append("\n");
+        }
+        map.append("go").append("\n");
         PlanetParser planetParser = new FirstTurnPlanetParser();
-        return planetParser.parsePlanets(br).state;
+        return planetParser.parsePlanets(new BufferedReader(new StringReader(map.toString()))).state;
     }
     @Test
     public void test() throws IOException {

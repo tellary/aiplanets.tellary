@@ -12,6 +12,8 @@ public class PlanetWarsState {
 
     private ArrayList<int[]> numShipsInTime;
     private ArrayList<int[]> ownersInTime;
+    private Arrivals originalMyArrivals;
+    private Arrivals originalEnemyArrivals;
     private Arrivals myArrivals;
     private Arrivals enemyArrivals;
 
@@ -31,7 +33,9 @@ public class PlanetWarsState {
         this.ownersInTime = new ArrayList<int[]>(StaticPlanetsData.maxDistance*10);
         this.ownersInTime.add(owners);
         this.myArrivals = myArrivals;
+        this.originalMyArrivals = myArrivals.copy();
         this.enemyArrivals = enemyArrivals;
+        this.originalEnemyArrivals = enemyArrivals.copy();
     }
 
     public int getNumShips(int i) {
@@ -62,6 +66,10 @@ public class PlanetWarsState {
         return enemyArrivals;
     }
 
+    public Arrivals getMyArrivals() {
+        return myArrivals;
+    }
+
     public PlanetWarsState setPlans(Iterator<SquareMatrix> myPlan, Iterator<SquareMatrix> enemyPlan) {
         int[] planets = numShipsInTime.get(0);
         int[] planetsCopy = new int[planets.length];
@@ -70,10 +78,7 @@ public class PlanetWarsState {
         int[] ownersCopy = new int[owners.length];
         System.arraycopy(owners, 0, ownersCopy, 0, planets.length);
 
-        Arrivals myArrivals = this.myArrivals.copy();
-        Arrivals enemyArrivals = this.enemyArrivals.copy();
-
-        PlanetWarsState copy = new PlanetWarsState(planetsCopy, ownersCopy, myArrivals, enemyArrivals);
+        PlanetWarsState copy = new PlanetWarsState(planetsCopy, ownersCopy, originalMyArrivals, originalEnemyArrivals);
         copy.myPlan = myPlan;
         copy.enemyPlan = enemyPlan;
         return copy;

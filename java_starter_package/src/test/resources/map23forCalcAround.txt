@@ -1,6 +1,6 @@
 P 11.6124431072 9.83697106555 0 100 1
-P 11.60660153 16.8718782728 1 100 5 #my initial planet
-P 11.6182846843 2.80206385833 2 0 5 #enemy initial planet, is empty due to flight started from it, see below
+P 11.60660153 16.8718782728 1 63 5 #my initial planet
+P 11.6182846843 2.80206385833 2 43 5 #enemy initial planet, is empty due to flight started from it, see below
 P 15.4988999928 0.0 0 49 2
 P 7.72598622151 19.6739421311 0 49 2
 P 20.4144729459 8.60853591864 0 53 3
@@ -22,4 +22,8 @@ P 7.26943781513 1.90119373243 0 19 1
 P 13.5869556462 0.613611682931 0 36 4
 P 9.63793056816 19.0603304482 0 36 4
 
-F 2 100 2 1 15 15 #A fleet of 100 ships running from first enemy planet to may planet
+F 1 37 1 22 3 3
+F 2 37 2 21 3 3
+
+F 2 20 2 20 5 5
+go
