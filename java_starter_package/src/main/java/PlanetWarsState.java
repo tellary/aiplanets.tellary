@@ -10,8 +10,8 @@ public class PlanetWarsState {
     public static final int ENEMY = 2;
     public static final int NEUTRAL = 0;
 
-    private LinkedList<int[]> numShipsInTime;
-    private LinkedList<int[]> ownersInTime;
+    private ArrayList<int[]> numShipsInTime;
+    private ArrayList<int[]> ownersInTime;
     private Arrivals myArrivals;
     private Arrivals enemyArrivals;
 
@@ -26,20 +26,20 @@ public class PlanetWarsState {
             Arrivals myArrivals,
             Arrivals enemyArrivals) {
 
-        this.numShipsInTime = new LinkedList<int[]>();
+        this.numShipsInTime = new ArrayList<int[]>(StaticPlanetsData.maxDistance*10);
         this.numShipsInTime.add(planets);
-        this.ownersInTime = new LinkedList<int[]>();
+        this.ownersInTime = new ArrayList<int[]>(StaticPlanetsData.maxDistance*10);
         this.ownersInTime.add(owners);
         this.myArrivals = myArrivals;
         this.enemyArrivals = enemyArrivals;
     }
 
     public int getNumShips(int i) {
-        return numShipsInTime.peek()[i];
+        return numShipsInTime.get(0)[i];
     }
 
     public int getOwner(int i) {
-        return ownersInTime.peek()[i];
+        return ownersInTime.get(0)[i];
     }
 
     public int[] getNumShipsOnTurn(int turn) {
@@ -47,7 +47,7 @@ public class PlanetWarsState {
     }
 
     public int getNumPlanets() {
-        return numShipsInTime.peek().length;
+        return numShipsInTime.get(0).length;
     }
 
     public int[] getOwnersOnTurn(int turn) {
@@ -63,10 +63,10 @@ public class PlanetWarsState {
     }
 
     public PlanetWarsState setPlans(Iterator<SquareMatrix> myPlan, Iterator<SquareMatrix> enemyPlan) {
-        int[] planets = numShipsInTime.peek();
+        int[] planets = numShipsInTime.get(0);
         int[] planetsCopy = new int[planets.length];
         System.arraycopy(planets, 0, planetsCopy, 0, planets.length);
-        int[] owners = ownersInTime.peek();
+        int[] owners = ownersInTime.get(0);
         int[] ownersCopy = new int[owners.length];
         System.arraycopy(owners, 0, ownersCopy, 0, planets.length);
 
