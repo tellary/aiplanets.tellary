@@ -40,7 +40,7 @@ public class AttackSourcePlanetAntiPlans {
                                     append(" from ").append(i).append("(").append(planets[i]).append(")");
                             Log.log(sb.toString());
                         }
-                        int requiredNumShips = MyBot.requiredNumShips(state, k, i, PlanetWarsState.ME);
+                        int requiredNumShips = MyBot.requiredNumShips(state, k, i, PlanetWarsState.ENEMY);
                         if (Log.isEnabled()) {
                             StringBuilder sb = new StringBuilder("Required num ships by growth and arrivals: ");
                             sb.append(requiredNumShips);

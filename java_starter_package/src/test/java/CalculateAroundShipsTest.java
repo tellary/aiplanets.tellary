@@ -13,7 +13,7 @@ public class CalculateAroundShipsTest {
     public void test() throws IOException {
         PlanetWarsState state = PlanetsParserTest.parseMap("map23with100arrivals.txt");
 
-        int aroundShips = MyBot.calculateAroundShips(state, 1, 22, PlanetWarsState.ENEMY);
+        int aroundShips = MyBot.calculateAroundShips(state, 1, 22, PlanetWarsState.ME);
         Assert.assertEquals(0, aroundShips);
     }
 
@@ -24,7 +24,7 @@ public class CalculateAroundShipsTest {
 //        int aroundShips = MyBot.calculateAroundShips(state, 1, 0, PlanetWarsState.ENEMY);
 //        Assert.assertEquals(505, aroundShips);
 
-        int aroundShips = MyBot.calculateAroundShips(state, 1, 14, PlanetWarsState.ENEMY);
+        int aroundShips = MyBot.calculateAroundShips(state, 1, 14, PlanetWarsState.ME);
         Assert.assertEquals(65, aroundShips);
     }
 }
