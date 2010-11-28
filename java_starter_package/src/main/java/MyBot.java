@@ -14,6 +14,7 @@ public class MyBot {
     public static int turn = 0;
     public static long start;
 
+    private static Timer timer = new DefaultTimer();
 
 
     // The DoTurn function is where your code goes. The PlanetWars object
@@ -125,6 +126,9 @@ public class MyBot {
                 result = state.evaluateTurn();
                 if (result == Result.FAILED)
                     return Long.MIN_VALUE;
+                if (timer.shouldStop()) {
+                    return Long.MIN_VALUE; 
+                }
             }
 
 //            long score = scoreWin(state, scoreNumShips(state));
@@ -400,19 +404,32 @@ public class MyBot {
     private static Collection<Plan> guessGoodPlans(PlanetWarsState state) {
         Collection<Plan> plans = new LinkedHashSet<Plan>();
         plans.add(doNothingPlan(state));
+        if (timer.shouldStop())
+            return plans;
         addKickOutPlans(state, plans);
+        if (timer.shouldStop())
+            return plans;
         addTakeOnePlanetPlans(state, 0, plans);
-        int step = 15;
+        if (timer.shouldStop())
+            return plans;
+        int step = 25;
         for (int i = 95; i >= 0; i-=step) {
             addTakeOnePlanetPlans(state, ((float) (100 - i)) / 100, plans);
+            if (timer.shouldStop())
+            return plans;
         }
         for (int i = 95; i >= 0; i-=step) {
             onePlanetDefenseAnotherPlans(state, ((float) (100 - i)) / 100, plans);
+            if (timer.shouldStop())
+            return plans;
         }
 
         addExchangeShipsPlans(state, 0.9, plans);
-        addExchangeShipsPlans(state, 0.6, plans);
-        addExchangeShipsPlans(state, 0.3, plans);
+        if (timer.shouldStop())
+            return plans;
+        addExchangeShipsPlans(state, 0.4, plans);
+        if (timer.shouldStop())
+            return plans;
         addExchangeShipsPlans(state, 0.1, plans);
 //        addAttackAllPlanetsPlan(state, plans);
 
@@ -553,6 +570,8 @@ public class MyBot {
 
         for (int i = 0; i < planets.length; ++i) {
             if (owners[i] != PlanetWarsState.ME) {
+                if (timer.shouldStop())
+                    return;
                 List<Integer> sortedPlanetsRow = StaticPlanetsData.sortedPlanets.get(i);
                 for (int j = 0; j < sortedPlanetsRow.size(); ++j) {
                     int mostDistantIdx = sortedPlanetsRow.get(j);
@@ -583,14 +602,21 @@ public class MyBot {
                                     i,
                                     availableShips);
                             availableShipSum += availableShips;
+                            if (timer.shouldStop())
+                                return;
                         }
 
                         if (availableShipSum > requiredNumShips) {
+                            int numShips = plan.get(0, mostDistantIdx, i);
+                            int delta = availableShipSum - requiredNumShips;
+                            if (numShips > delta)
+                                plan.add(0, mostDistantIdx, i, -delta);
+                            else
+                                plan.add(0, mostDistantIdx, i, -numShips);
                             if (Log.isEnabled()) {
                                 Log.log("Going to add takeOnePlanet plan, defense factor: " + defenseFactor);
                                 Log.log(planToString(state, plan));
                             }
-//                            plan.add(0, mostDistantIdx, i, requiredNumShips - availableShipSum);
                             plans.add(plan);
                             break;
                         }

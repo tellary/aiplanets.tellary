@@ -25,6 +25,17 @@ public class Plan {
         transitionsInTime.add(transitions);
     }
 
+    public int get(int turn, int i, int j) {
+        if (turn < transitionsInTime.size()) {
+            SquareMatrix sm = transitionsInTime.get(turn);
+            if (sm != null) {
+                return sm.get(i, j);
+            }
+        }
+
+        return 0;
+    }
+
     public void add(int turn, int i, int j, int numShips) {
         SquareMatrix sm = null;
         if (turn < transitionsInTime.size()) {
