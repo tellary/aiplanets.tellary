@@ -107,7 +107,7 @@ public class MyBot {
         antiPlans.add(doNothingPlan(initialState));
         //TODO: Uncomment 2 anti-plans
 //        antiPlans.addAll(AttackTargetPlanetAntiPlans.attackTargetPlanetAntiPlans(initialState, plan));
-//        antiPlans.addAll(AttackSourcePlanetAntiPlans.attackSourcePlanetAntiPlans(initialState, plan));
+        antiPlans.addAll(AttackSourcePlanetAntiPlans.attackSourcePlanetAntiPlans(initialState, plan));
 //        antiPlans.add(attackWeakestPlanetAntiPlan(initialState));
 
         long worseScore = Long.MAX_VALUE;

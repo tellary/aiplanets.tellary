@@ -46,13 +46,16 @@ public class AttackSourcePlanetAntiPlans {
                             sb.append(requiredNumShips);
                             Log.log(sb.toString());
                         }
+                        if (requiredNumShips < 0) {
+                            continue;
+                        }
                         requiredNumShips -= leavers;
                         if (Log.isEnabled()) {
                             StringBuilder sb = new StringBuilder("With transition: ");
                             sb.append(requiredNumShips);
                             Log.log(sb.toString());
                         }
-//                        requiredNumShips += MyBot.calculateAroundShips(state, k, i, PlanetWarsState.ME);
+//                        requiredNumShips += MyBot.calculateAroundShips(state, k, i, PlanetWarsState.ENEMY);
 //                        if (Log.isEnabled()) {
 //                            StringBuilder sb = new StringBuilder("With ships around: ");
 //                            sb.append(requiredNumShips);
