@@ -13,7 +13,7 @@ import java.util.Set;
 public class TestPlan {
     @Test
     public void testEmpty() {
-        Plan plan = new Plan();
+        Plan plan = new Plan(StaticPlanetsData.growth.length, StaticPlanetsData.maxDistance);
         Assert.assertTrue(plan.isEmpty());
 
         plan.addTransitions(new SquareMatrix(5));
@@ -29,7 +29,7 @@ public class TestPlan {
         
         sm = new SquareMatrix(2);
         sm.set(0, 1, 2);
-        plan = new Plan();
+        plan = new Plan(2, StaticPlanetsData.maxDistance);
         plan.addTransitions(sm);
         Assert.assertTrue(set.add(plan));
         //Attempt to add same plan twice
@@ -37,13 +37,13 @@ public class TestPlan {
 
         sm = new SquareMatrix(2);
         sm.set(0, 1, 3);
-        plan = new Plan();
+        plan = new Plan(2, StaticPlanetsData.maxDistance);
         plan.addTransitions(sm);
         Assert.assertTrue(set.add(plan));
 
         sm = new SquareMatrix(2);
         sm.set(0, 1, 2);
-        plan = new Plan();
+        plan = new Plan(2, StaticPlanetsData.maxDistance);
         plan.addTransitions(sm);
         Assert.assertFalse(set.add(plan));
 

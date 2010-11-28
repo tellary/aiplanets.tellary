@@ -10,8 +10,8 @@ import java.util.Iterator;
  * Time: 12:13:26 AM
  */
 public class TestSumPlans {
-    public Plan plan1 = new Plan();
-    public Plan plan2 = new Plan();
+    public Plan plan1 = new Plan(2, StaticPlanetsData.maxDistance);
+    public Plan plan2 = new Plan(2, StaticPlanetsData.maxDistance);
 
     @Before
     public void before() {
@@ -52,7 +52,7 @@ public class TestSumPlans {
 
     @Test
     public void testDifferentSizeBeginning() {
-        Plan plan = new Plan();
+        Plan plan = new Plan(2, StaticPlanetsData.maxDistance);
         SquareMatrix sm = new SquareMatrix(3);
         plan.addTransitions(sm);
         try {
@@ -65,7 +65,7 @@ public class TestSumPlans {
 
     @Test
     public void testDifferentSizeTail() {
-        Plan plan = new Plan();
+        Plan plan = new Plan(3, StaticPlanetsData.maxDistance);
         SquareMatrix sm = new SquareMatrix(2);
         plan.addTransitions(sm);
         sm = new SquareMatrix(3);

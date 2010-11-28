@@ -4,7 +4,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by Silvestrov Ilya
@@ -31,7 +30,7 @@ public class PlanEvaluationTest {
     @Test
     public void testWithMyDepartures() throws IOException {
         PlanetWarsState state = PlanetsParserTest.parseMap("map23with100arrivals.txt");
-        Plan plan = new Plan();
+        Plan plan = new Plan(StaticPlanetsData.growth.length, StaticPlanetsData.maxDistance);
         SquareMatrix sm = new SquareMatrix(StaticPlanetsData.growth.length);
         sm.set(1, 22, 37);
         plan.addTransitions(sm);
@@ -59,7 +58,7 @@ public class PlanEvaluationTest {
         Plan plan;
         SquareMatrix sm;
 
-        plan = new Plan();
+        plan = new Plan(StaticPlanetsData.growth.length, StaticPlanetsData.maxDistance);
         sm = new SquareMatrix(StaticPlanetsData.growth.length);
         //close planet
         sm.set(1, 19, 20);
@@ -73,7 +72,7 @@ public class PlanEvaluationTest {
         long closeScoreJustNum = MyBot.scoreNumShips(state);
 
         
-        plan = new Plan();
+        plan = new Plan(StaticPlanetsData.growth.length, StaticPlanetsData.maxDistance);
         sm = new SquareMatrix(StaticPlanetsData.growth.length);
         //close planet
         sm.set(1, 20, 20);
@@ -89,5 +88,65 @@ public class PlanEvaluationTest {
 
         Assert.assertThat(distantScoreJustNum, Matchers.lessThan(closeScoreJustNum));
         Assert.assertThat(distantScore, Matchers.lessThan(closeScore));
+
+        //Now going to check that bot states has just two owners
+        int[] owners = state.getOwnersOnTurn(state.getCurrentTurn());
+        int count = 0;
+        for (int owner : owners) {
+            if (owner == PlanetWarsState.ME) {
+                ++count;
+            }
+        }
+        Assert.assertEquals(2, count);
+    }
+
+    @Test
+    public void testGrowthNumShips2() throws IOException {
+        PlanetWarsState state;
+        PlanetWarsState originalState = PlanetsParserTest.parseMap("map23with100arrivals.txt");
+
+        Plan plan;
+        SquareMatrix sm;
+
+        plan = new Plan(StaticPlanetsData.growth.length, StaticPlanetsData.maxDistance);
+        sm = new SquareMatrix(StaticPlanetsData.growth.length);
+        //close planet
+        sm.set(1, 19, 20);
+        plan.addTransitions(sm);
+        state = originalState.setPlans(plan.transitions().iterator(), Collections.<SquareMatrix>emptyList().iterator());
+        for (int t = 0; t < StaticPlanetsData.maxDistance; ++t) {
+            state.evaluateTurn();
+        }
+
+        long closeScore = MyBot.scoreNumShipsAndEnemyCoulomb(state);
+        long closeScoreJustNum = MyBot.scoreNumShips(state);
+
+
+        plan = new Plan(StaticPlanetsData.growth.length, StaticPlanetsData.maxDistance);
+        sm = new SquareMatrix(StaticPlanetsData.growth.length);
+        //close planet
+        sm.set(1, 20, 20);
+        plan.addTransitions(sm);
+        state = originalState.setPlans(plan.transitions().iterator(), Collections.<SquareMatrix>emptyList().iterator());
+        for (int t = 0; t < StaticPlanetsData.maxDistance; ++t) {
+            state.evaluateTurn();
+        }
+
+        long distantScore = MyBot.scoreNumShipsAndEnemyCoulomb(state);
+        long distantScoreJustNum = MyBot.scoreNumShips(state);
+
+
+        Assert.assertThat(distantScoreJustNum, Matchers.lessThan(closeScoreJustNum));
+        Assert.assertThat(distantScore, Matchers.lessThan(closeScore));
+
+        //Now going to check that bot states has just two owners
+        int[] owners = state.getOwnersOnTurn(state.getCurrentTurn());
+        int count = 0;
+        for (int owner : owners) {
+            if (owner == PlanetWarsState.ME) {
+                ++count;
+            }
+        }
+        Assert.assertEquals(2, count);
     }
 }

@@ -78,7 +78,8 @@ public class PlanetWarsState {
         int[] ownersCopy = new int[owners.length];
         System.arraycopy(owners, 0, ownersCopy, 0, planets.length);
 
-        PlanetWarsState copy = new PlanetWarsState(planetsCopy, ownersCopy, originalMyArrivals, originalEnemyArrivals);
+        PlanetWarsState copy = new PlanetWarsState(planetsCopy, ownersCopy,
+                originalMyArrivals.copy(), originalEnemyArrivals.copy());
         copy.myPlan = myPlan;
         copy.enemyPlan = enemyPlan;
         return copy;

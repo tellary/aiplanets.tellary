@@ -21,7 +21,7 @@ public class TakeLastPlanetTest {
 
         System.out.println(MyBot.scoreComplex(state));
         
-        Plan plan = new Plan();
+        Plan plan = new Plan(StaticPlanetsData.growth.length, StaticPlanetsData.maxDistance);
         SquareMatrix sm = new SquareMatrix(StaticPlanetsData.growth.length);
         sm.set(2, 0, 120);
         plan.addTransitions(sm);

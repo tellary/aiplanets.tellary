@@ -56,7 +56,7 @@ public class PlanSelection {
 
     public Plan getBestPlan() {
         if (population.isEmpty()) {
-            Plan plan = new Plan();
+            Plan plan = new Plan(StaticPlanetsData.growth.length, StaticPlanetsData.maxDistance);
             plan.addTransitions(new SquareMatrix(0));
             return plan;
         }

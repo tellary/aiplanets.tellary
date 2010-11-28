@@ -17,6 +17,11 @@ public class SquareMatrix {
         data = new HashMap<Integer, Map<Integer, Integer>>(capacity);
     }
 
+    public void add(int i, int j, int val) {
+        val += get(i, j);
+        set(i, j, val);
+    }
+
     public void set(int i, int j, int val) {
         if (val == 0)
             return;

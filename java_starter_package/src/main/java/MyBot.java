@@ -430,7 +430,7 @@ public class MyBot {
                     if (owners[j] == PlanetWarsState.ME) {
                         SquareMatrix transitions = new SquareMatrix(planets.length);
                         transitions.set(i, j, (int)(factor*planets[i]));
-                        Plan transitionsInTime = new Plan();
+                        Plan transitionsInTime = new Plan(planets.length, StaticPlanetsData.maxDistance);
                         transitionsInTime.addTransitions(transitions);
 
                         plans.add(transitionsInTime);
@@ -466,7 +466,7 @@ public class MyBot {
                 }
             }
         }
-        Plan transitionsInTime = new Plan();
+        Plan transitionsInTime = new Plan(planets.length, StaticPlanetsData.maxDistance);
         transitionsInTime.addTransitions(transitions);
 
         plans.add(transitionsInTime);
@@ -475,7 +475,7 @@ public class MyBot {
     private static Plan doNothingPlan(PlanetWarsState state) {
         int[] planets = state.getNumShipsOnTurn(0);
         SquareMatrix transitions = new SquareMatrix(planets.length);
-        Plan plan = new Plan();
+        Plan plan = new Plan(planets.length, StaticPlanetsData.maxDistance);
         plan.addTransitions(transitions);
 
         return plan;
@@ -518,7 +518,7 @@ public class MyBot {
                             continue;
                         }
 
-                        Plan plan = new Plan();
+                        Plan plan = new Plan(owners.length, StaticPlanetsData.maxDistance);
                         SquareMatrix tr;
                         plan.addTransitions(tr = new SquareMatrix(numPlanets));
 
@@ -554,24 +554,45 @@ public class MyBot {
         for (int i = 0; i < planets.length; ++i) {
             if (owners[i] != PlanetWarsState.ME) {
                 List<Integer> sortedPlanetsRow = StaticPlanetsData.sortedPlanets.get(i);
-                for (int j : sortedPlanetsRow) {
-                    if (owners[j] == PlanetWarsState.ME) {
-                        int requiredNumShips = requiredNumShips(state, j, i, PlanetWarsState.ME);
+                for (int j = 0; j < sortedPlanetsRow.size(); ++j) {
+                    int mostDistantIdx = sortedPlanetsRow.get(j);
+                    int maxDistance = StaticPlanetsData.distances[mostDistantIdx][i];
+                    if (owners[mostDistantIdx] == PlanetWarsState.ME) {
+                        for (int t = state.getCurrentTurn(); t < maxDistance; ++t) {
+                            state.evaluateTurn();
+                        }
+                        int requiredNumShips = requiredNumShips(state, mostDistantIdx, i, PlanetWarsState.ME);
                         if (requiredNumShips < 0)
-                            continue;
-                        requiredNumShips += calculateAroundShips(state, j, i, PlanetWarsState.ME);
-                        int searchedNumShips = (int)(planets[j] * (1.0 - defenseFactor));
-                        if (searchedNumShips > requiredNumShips && requiredNumShips > 0) {
-                            SquareMatrix transitions = new SquareMatrix(planets.length);
-                            transitions.set(j, i, requiredNumShips);
-                            Plan transitionsInTime = new Plan();
-                            transitionsInTime.addTransitions(transitions);
+                            break;
+                        requiredNumShips += calculateAroundShips(state, mostDistantIdx, i, PlanetWarsState.ME);
 
+                        Plan plan = new Plan(owners.length, StaticPlanetsData.maxDistance);
+                        int availableShipSum = 0;
+                        for (int k = 0; k < j + 1; ++k) {
+                            int distance = StaticPlanetsData.distances[sortedPlanetsRow.get(k)][i];
+                            int startTime = maxDistance - distance;
+                            int kPlanetIdx = sortedPlanetsRow.get(k);
+                            if (state.getOwnersOnTurn(startTime)[kPlanetIdx] != PlanetWarsState.ME) {
+                                continue;
+                            }
+                            int availableShips =
+                                    (int) (state.getNumShipsOnTurn(startTime)[kPlanetIdx] *
+                                            (1.0 - defenseFactor));
+                            plan.add(startTime,
+                                    sortedPlanetsRow.get(k),
+                                    i,
+                                    availableShips);
+                            availableShipSum += availableShips;
+                        }
+
+                        if (availableShipSum > requiredNumShips) {
                             if (Log.isEnabled()) {
                                 Log.log("Going to add takeOnePlanet plan, defense factor: " + defenseFactor);
-                                Log.log(planToString(state, transitionsInTime));
+                                Log.log(planToString(state, plan));
                             }
-                            plans.add(transitionsInTime);
+//                            plan.add(0, mostDistantIdx, i, requiredNumShips - availableShipSum);
+                            plans.add(plan);
+                            break;
                         }
                     }
                 }
@@ -593,7 +614,7 @@ public class MyBot {
                                 //TODO: Rewrite this to send only required num ships to protect a planet
                                 // which is going to be lost
                                 tr.set(j, i, (int) (planets[j] * factor));
-                                Plan transitionsInTime = new Plan();
+                                Plan transitionsInTime = new Plan(planets.length, StaticPlanetsData.maxDistance);
                                 transitionsInTime.addTransitions(tr);
 
                                 plans.add(transitionsInTime);

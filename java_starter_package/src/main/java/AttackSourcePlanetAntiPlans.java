@@ -60,7 +60,7 @@ public class AttackSourcePlanetAntiPlans {
 //                        }
                         if (planets[k] >= requiredNumShips && requiredNumShips > 0) {
                             SquareMatrix antiTurn = new SquareMatrix(firstTurn.size());
-                            Plan antiPlan = new Plan();
+                            Plan antiPlan = new Plan(planets.length, StaticPlanetsData.maxDistance);
                             antiPlan.addTransitions(antiTurn);
                             antiTurn.set(k, i, requiredNumShips);
                             if (Log.isEnabled()) {

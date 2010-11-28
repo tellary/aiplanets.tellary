@@ -27,7 +27,7 @@ public class PlanSelectionWithFindValuesScorerTest {
         for (int i = 0; i < 51; ++i) {
             SquareMatrix tr = new SquareMatrix(2);
             tr.set(0, 1, i);
-            Plan plan = new Plan();
+            Plan plan = new Plan(2, StaticPlanetsData.maxDistance);
             plan.addTransitions(tr);
             plans.add(plan);
         }
@@ -35,7 +35,7 @@ public class PlanSelectionWithFindValuesScorerTest {
         //Added repeated value for 20 to include equals comparison in population in PlanSelection
         SquareMatrix tr = new SquareMatrix(2);
         tr.set(0, 1, 20);
-        Plan plan = new Plan();
+        Plan plan = new Plan(2, StaticPlanetsData.maxDistance);
         plan.addTransitions(tr);
         plans.add(plan);
     }
