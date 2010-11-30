@@ -6,3 +6,6 @@ game.txt
 .idea
 *.iml
 java_starter_package/results
+/out
+/tmp
+target
